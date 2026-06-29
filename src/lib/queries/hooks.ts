@@ -6,7 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import * as repo from "@/lib/repositories";
-import type { ActionItem, Note, Task } from "@/types/domain";
+import type { ActionItem, GanttRow, Note, Task } from "@/types/domain";
 
 /** クエリキー (docs/05 §2)。データ取得は必ずこのフック経由。 */
 export const qk = {
@@ -162,6 +162,42 @@ export function useToggleAction() {
       if (ctx?.prev) qc.setQueryData(qk.actions, ctx.prev);
     },
     onSettled: () => qc.invalidateQueries({ queryKey: qk.actions }),
+  });
+}
+
+/** ガントのバー編集 (開始/終了日)。全 gantt キャッシュを楽観的に更新 */
+export function useUpdateTaskSchedule() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      startDate,
+      dueDate,
+    }: {
+      id: string;
+      startDate: string;
+      dueDate: string;
+    }) => repo.updateTaskSchedule(id, startDate, dueDate),
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: ["gantt"] });
+      qc.setQueriesData<GanttRow[]>({ queryKey: ["gantt"] }, (old) =>
+        old?.map((r) =>
+          r.id === vars.id && r.bar
+            ? {
+                ...r,
+                bar: { start: vars.startDate, due: vars.dueDate },
+                milestone: r.milestone
+                  ? { ...r.milestone, date: vars.dueDate }
+                  : undefined,
+              }
+            : r,
+        ),
+      );
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["gantt"] });
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+    },
   });
 }
 

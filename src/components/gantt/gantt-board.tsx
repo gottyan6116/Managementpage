@@ -1,23 +1,51 @@
 "use client";
 
 import { useState } from "react";
-import { Crosshair, Maximize2, Minimize2, Minus, Plus } from "lucide-react";
+import { Crosshair, Maximize2, Minimize2, Minus, MoveHorizontal, Plus } from "lucide-react";
 import { GanttChart } from "./gantt-chart";
 import { GanttFilterBar } from "./gantt-filter-bar";
+import { useGanttRows } from "@/lib/queries/hooks";
 import { GANTT_DAY_WIDTH_DEFAULT, useUiStore } from "@/stores/ui-store";
+import { cn } from "@/lib/utils";
 
 export function GanttBoard() {
   const [fullscreen, setFullscreen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<string | undefined>(undefined);
   const dayWidth = useUiStore((s) => s.ganttDayWidth);
   const setDayWidth = useUiStore((s) => s.setGanttDayWidth);
+
+  // タブ用にプロジェクト一覧 (ガントに表示される案件) を取得
+  const { data: allRows } = useGanttRows();
+  const projects = (allRows ?? []).filter((r) => r.type === "project");
 
   return (
     <div className="space-y-4">
       <GanttFilterBar />
 
-      <div>
-        {/* チャート右上のツールバー */}
-        <div className="flex items-center justify-end gap-1.5 mb-2.5">
+      {/* プロジェクトタブ + ツールバー */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mb-1">
+          <TabButton
+            active={selectedProject === undefined}
+            onClick={() => setSelectedProject(undefined)}
+            label="すべて"
+          />
+          {projects.map((p) => (
+            <TabButton
+              key={p.id}
+              active={selectedProject === p.id}
+              onClick={() => setSelectedProject(p.id)}
+              label={p.label}
+              color={p.color}
+            />
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="hidden xl:inline-flex items-center gap-1 text-[11px] text-ink-muted mr-1">
+            <MoveHorizontal className="size-3.5" />
+            バーをドラッグで期間編集
+          </span>
           <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent("gantt:fit-today"))}
@@ -61,9 +89,47 @@ export function GanttBoard() {
             {fullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
           </button>
         </div>
-
-        <GanttChart variant="full" height={fullscreen ? 720 : 540} />
       </div>
+
+      <GanttChart
+        variant="full"
+        projectId={selectedProject}
+        editable
+        height={fullscreen ? 760 : 560}
+      />
     </div>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  label,
+  color,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  color?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 h-8 rounded-full px-3 text-xs font-medium whitespace-nowrap transition-colors border",
+        active
+          ? "bg-brand-600 text-white border-brand-600"
+          : "bg-surface text-ink-soft border-line hover:bg-surface-muted",
+      )}
+    >
+      {color && (
+        <span
+          className="size-2 rounded-full shrink-0"
+          style={{ backgroundColor: active ? "rgba(255,255,255,0.9)" : color }}
+        />
+      )}
+      <span className="truncate max-w-[160px]">{label}</span>
+    </button>
   );
 }

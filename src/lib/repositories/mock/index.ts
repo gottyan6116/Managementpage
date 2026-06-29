@@ -95,6 +95,19 @@ export async function toggleTaskDone(id: string): Promise<void> {
   }
 }
 
+/** ガント: バーのドラッグで開始日/終了日を更新 */
+export async function updateTaskSchedule(
+  id: string,
+  startDate: string,
+  dueDate: string,
+): Promise<void> {
+  await delay();
+  const t = tasks.find((x) => x.id === id);
+  if (!t) return;
+  t.startDate = startDate;
+  t.dueDate = dueDate;
+}
+
 /** ボード: 列移動でステータス更新 */
 export async function moveTask(
   id: string,

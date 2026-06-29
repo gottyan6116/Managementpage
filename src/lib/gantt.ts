@@ -33,6 +33,11 @@ export function dateToX(
   return differenceInCalendarDays(d(date), rangeStart) * dayWidth;
 }
 
+/** ISO 日付 (yyyy-MM-dd) を days 日ずらして返す */
+export function addDaysISO(date: string, days: number): string {
+  return format(addDays(parseISO(date), days), "yyyy-MM-dd");
+}
+
 export interface BarGeometry {
   left: number;
   width: number;
