@@ -1,0 +1,30 @@
+# ProManage — Cursor / AntiGravity / Codex 共通ルール
+# （Claude Code は CLAUDE.md を、その他エージェントはこのファイルを起点に読むこと）
+
+## 必読ドキュメント
+- 着手前に CLAUDE.md と docs/00〜06 を読む。設計の真実は docs/ 配下にある。
+- UI はスクリーンショットが「正」。実装後に必ず見比べて差分を潰す。
+
+## スタック（厳守）
+- Next.js 15 (App Router) + React 19 + TypeScript strict
+- Tailwind CSS v4 + shadcn/ui（色/余白/角丸は docs/02 のトークンのみ使用、マジック値禁止）
+- TanStack Query（サーバー状態）/ Zustand（UI状態）/ RHF+Zod（フォーム）
+- Supabase（Postgres/Auth/Storage/Realtime）
+- recharts / lucide-react / @dnd-kit / date-fns(ja)
+
+## コード規約
+- any 禁止。外部入力は Zod でパース。
+- Server Components 既定。"use client" は対話の末端のみ。
+- データ取得は src/lib/queries のフック経由（直接 fetch/supabase 呼び出し禁止）。
+- 表示ラベルは src/lib/labels.ts、日付は src/lib/date.ts を必ず経由。
+- 命名: コンポーネント PascalCase、フック useXxx、DB snake_case。
+
+## 進め方
+- docs/06_roadmap.md のタスクを上から1つずつ。1タスク=1ブランチ/コミット。
+- 不明点は推測で進めず、該当箇所に TODO コメントを残して確認を促す。
+- 各タスクは DoD（型/lint クリーン・スクショ一致・楽観的更新・a11y）を満たしてから完了。
+
+## やってはいけないこと
+- 一度に全画面を作る／設計書を読まずに実装する
+- トークンを無視して色や余白を直書きする
+- データ取得をコンポーネントに直書きする（モック→本番の差し替えができなくなる）

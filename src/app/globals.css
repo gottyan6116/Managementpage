@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+/*
+  ProManage デザイントークン (docs/02_design_system.md 準拠)
+  色・余白・角丸・影は必ずこのトークンを参照する。
+*/
+
+@theme {
+  /* ===== Brand / Accent ===== */
+  --color-brand-50: #eff5ff;
+  --color-brand-100: #dbe8fe;
+  --color-brand-300: #93b4fb;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+
+  /* プロジェクト識別色 */
+  --color-teal-500: #14b8a6;
+  --color-purple-500: #8b5cf6;
+  --color-orange-500: #f59e0b;
+  --color-sky-500: #38bdf8;
+
+  /* ===== Neutral ===== */
+  --color-app: #f7f9fc; /* アプリ全体背景 */
+  --color-surface: #ffffff; /* カード/パネル */
+  --color-surface-muted: #f1f5f9; /* テーブルヘッダ・hover */
+  --color-line: #e8edf3; /* 境界線 */
+  --color-ink: #0f172a; /* 主要テキスト */
+  --color-ink-soft: #475569; /* 補助テキスト */
+  --color-ink-muted: #94a3b8; /* キャプション/プレースホルダ */
+
+  /* ===== Radius ===== */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+
+  /* ===== Shadow (淡く広い) ===== */
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 16px rgba(16, 24, 40, 0.06);
+  --shadow-pop: 0 8px 30px rgba(16, 24, 40, 0.12);
+  --shadow-side: 0 8px 40px rgba(40, 80, 160, 0.25);
+
+  /* ===== Font ===== */
+  --font-sans: var(--font-inter), var(--font-noto-jp), system-ui, sans-serif;
+}
+
+:root {
+  /* サイドバー (グラデーション + ガラス) — rgba/gradient はここで定義 */
+  --sidebar-from: #3e6dd8;
+  --sidebar-to: #6fa8e6;
+  --sidebar-text: rgba(255, 255, 255, 0.92);
+  --sidebar-text-dim: rgba(255, 255, 255, 0.72);
+  --sidebar-active-bg: rgba(255, 255, 255, 0.95);
+  --sidebar-active-text: #2563eb;
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.14);
+}
+
+* {
+  border-color: var(--color-line);
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  background: var(--color-app);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "palt";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* フォーカスリング (アクセシビリティ) */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* スクロールバー (控えめ) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #d3dbe6;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b9c4d4;
+  background-clip: content-box;
+}
+
+/* ガント左ペインのスクロールバーを隠す (縦同期は右ペイン側で見せる) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
