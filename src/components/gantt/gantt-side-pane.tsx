@@ -4,23 +4,23 @@ import { useMemo } from "react";
 import { Flag } from "lucide-react";
 import { SectionCard } from "@/components/shared/section-card";
 import { ProgressBar } from "@/components/shared/progress-bar";
-import { useMilestones, useProjects } from "@/lib/queries/hooks";
+import { useGanttRows, useMilestones, useProjects } from "@/lib/queries/hooks";
 import { formatDue, relativeDayLabel } from "@/lib/date";
 
 export function GanttSidePane() {
   const { data: milestones } = useMilestones();
   const { data: projects } = useProjects("all");
+  const { data: ganttRows } = useGanttRows();
 
   const nameOf = useMemo(() => {
     const map = new Map(projects?.map((p) => [p.id, p]));
     return (id: string | null) => (id ? map.get(id) : undefined);
   }, [projects]);
 
-  const inProgress = projects?.filter(
-    (p) => p.status === "in_progress" || p.status === "final_check",
-  );
-  const avg = inProgress?.length
-    ? Math.round(inProgress.reduce((s, p) => s + p.progress, 0) / inProgress.length)
+  // ガントに表示中のプロジェクト行と同じ集合・進捗で揃える
+  const summary = ganttRows?.filter((r) => r.type === "project") ?? [];
+  const avg = summary.length
+    ? Math.round(summary.reduce((s, p) => s + p.progress, 0) / summary.length)
     : 0;
 
   return (
@@ -58,11 +58,11 @@ export function GanttSidePane() {
 
       <SectionCard title="プロジェクト進捗サマリー" bodyClassName="pb-4">
         <ul className="space-y-3">
-          {inProgress?.map((p) => (
+          {summary.map((p) => (
             <li key={p.id} className="space-y-1.5">
               <div className="flex items-center gap-1.5">
                 <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
-                <span className="text-sm text-ink truncate">{p.name}</span>
+                <span className="text-sm text-ink truncate">{p.label}</span>
               </div>
               <ProgressBar value={p.progress} color={p.color} />
             </li>

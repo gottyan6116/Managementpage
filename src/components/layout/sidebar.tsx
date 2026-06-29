@@ -29,13 +29,18 @@ export function Sidebar() {
             boxShadow: "var(--shadow-side)",
           }}
         >
-          {/* ガラス質感の装飾オーバーレイ (写真の代替) */}
+          {/* 山と湖のシーン (frosted glass 質感) */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 opacity-60 mix-blend-soft-light"
+            className="pointer-events-none absolute inset-0 bg-cover bg-bottom opacity-55 mix-blend-soft-light"
+            style={{ backgroundImage: "url('/sidebar-bg.svg')" }}
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-50 mix-blend-soft-light"
             style={{
               backgroundImage:
-                "radial-gradient(120% 60% at 20% 0%, rgba(255,255,255,.45), transparent 60%), radial-gradient(80% 50% at 100% 100%, rgba(255,255,255,.25), transparent 70%)",
+                "radial-gradient(120% 50% at 20% 0%, rgba(255,255,255,.4), transparent 60%)",
             }}
           />
 

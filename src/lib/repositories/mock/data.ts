@@ -39,18 +39,18 @@ export const members: Member[] = [
 
 /* ===== プロジェクト (12件: 進行中8/最終確認1/完了2/保留1) ===== */
 export const projects: Project[] = [
-  { id: "p1", name: "新規業務改革プロジェクト", client: "株式会社グローバルホールディングス", color: C.brand, phase: "要件定義", status: "in_progress", priority: "high", progress: 72, startDate: "2025-05-07", endDate: "2025-06-20", nextDue: "2025-05-20", sortOrder: 1, memberIds: ["m-yamada", "m-sato", "m-suzuki"] },
-  { id: "p2", name: "CRM導入支援", client: "フューチャーリンク株式会社", color: C.teal, phase: "設計", status: "in_progress", priority: "medium", progress: 45, startDate: "2025-05-12", endDate: "2025-06-30", nextDue: "2025-05-19", sortOrder: 2, memberIds: ["m-sato", "m-tanaka"] },
-  { id: "p3", name: "基幹システム刷新", client: "日本テクノ工業株式会社", color: C.purple, phase: "開発", status: "in_progress", priority: "high", progress: 38, startDate: "2025-04-28", endDate: "2025-07-31", nextDue: "2025-05-23", sortOrder: 3, memberIds: ["m-yamada", "m-suzuki", "m-takahashi"] },
-  { id: "p4", name: "補助金LP改善", client: "クリエイトデザイン合同会社", color: C.orange, phase: "制作", status: "in_progress", priority: "medium", progress: 60, startDate: "2025-05-05", endDate: "2025-05-30", nextDue: "2025-05-21", sortOrder: 4, memberIds: ["m-tanaka"] },
-  { id: "p5", name: "社内業務効率化", client: "自社プロジェクト", color: C.sky, phase: "分析", status: "on_hold", priority: "low", progress: 25, startDate: "2025-05-01", endDate: "2025-06-15", nextDue: "2025-05-28", sortOrder: 5, memberIds: ["m-yamada", "m-takahashi"] },
+  { id: "p1", name: "新規業務改革プロジェクト", client: "株式会社グローバルホールディングス", color: C.brand, phase: "要件定義", status: "in_progress", priority: "high", progress: 65, startDate: "2025-04-28", endDate: "2025-05-29", nextDue: "2025-05-20", sortOrder: 1, memberIds: ["m-yamada", "m-sato", "m-suzuki"] },
+  { id: "p2", name: "CRM導入支援", client: "フューチャーリンク株式会社", color: C.teal, phase: "設計", status: "in_progress", priority: "medium", progress: 45, startDate: "2025-04-28", endDate: "2025-06-02", nextDue: "2025-05-19", sortOrder: 2, memberIds: ["m-sato", "m-yamada", "m-suzuki", "m-tanaka"] },
+  { id: "p3", name: "基幹システム刷新", client: "日本テクノ工業株式会社", color: C.purple, phase: "開発", status: "in_progress", priority: "high", progress: 30, startDate: "2025-04-28", endDate: "2025-06-20", nextDue: "2025-05-23", sortOrder: 3, memberIds: ["m-yamada", "m-suzuki", "m-tanaka", "m-sato"] },
+  { id: "p4", name: "補助金LP改善", client: "クリエイトデザイン合同会社", color: C.orange, phase: "制作", status: "in_progress", priority: "medium", progress: 70, startDate: "2025-04-28", endDate: "2025-05-28", nextDue: "2025-05-21", sortOrder: 4, memberIds: ["m-tanaka", "m-sato", "m-yamada", "m-suzuki"] },
+  { id: "p5", name: "社内業務効率化", client: "自社プロジェクト", color: C.sky, phase: "分析", status: "in_progress", priority: "low", progress: 55, startDate: "2025-04-28", endDate: "2025-06-10", nextDue: "2025-05-28", sortOrder: 5, memberIds: ["m-suzuki", "m-tanaka", "m-yamada", "m-sato"] },
   { id: "p6", name: "営業資料リニューアル", client: "株式会社サクセスパートナーズ", color: C.brandLight, phase: "制作", status: "final_check", priority: "medium", progress: 90, startDate: "2025-04-21", endDate: "2025-05-16", nextDue: "2025-05-16", sortOrder: 6, memberIds: ["m-tanaka", "m-sato"] },
   { id: "p7", name: "問い合わせフォーム改善", client: "ビジネスフロンティア株式会社", color: C.teal, phase: "テスト", status: "done", priority: "low", progress: 100, startDate: "2025-04-14", endDate: "2025-05-09", nextDue: "2025-05-09", sortOrder: 7, memberIds: ["m-suzuki"] },
   { id: "p8", name: "ECサイト構築", client: "リテールイノベーション株式会社", color: C.purple, phase: "開発", status: "in_progress", priority: "high", progress: 55, startDate: "2025-05-02", endDate: "2025-07-15", nextDue: "2025-05-22", sortOrder: 8, memberIds: ["m-suzuki", "m-tanaka"] },
   { id: "p9", name: "マーケティング分析基盤", client: "データドリブン株式会社", color: C.sky, phase: "構築", status: "in_progress", priority: "medium", progress: 42, startDate: "2025-05-08", endDate: "2025-06-25", nextDue: "2025-05-26", sortOrder: 9, memberIds: ["m-takahashi", "m-yamada"] },
   { id: "p10", name: "採用サイトリニューアル", client: "タレントブリッジ株式会社", color: C.orange, phase: "制作", status: "in_progress", priority: "medium", progress: 68, startDate: "2025-04-30", endDate: "2025-06-05", nextDue: "2025-05-24", sortOrder: 10, memberIds: ["m-tanaka"] },
   { id: "p11", name: "業務マニュアル整備", client: "自社プロジェクト", color: C.teal, phase: "制作", status: "done", priority: "low", progress: 100, startDate: "2025-04-01", endDate: "2025-05-02", nextDue: "2025-05-02", sortOrder: 11, memberIds: ["m-sato"] },
-  { id: "p12", name: "セキュリティ監査対応", client: "セーフガードシステムズ株式会社", color: C.brand, phase: "要件定義", status: "in_progress", priority: "high", progress: 30, startDate: "2025-05-10", endDate: "2025-06-18", nextDue: "2025-05-18", sortOrder: 12, memberIds: ["m-yamada", "m-suzuki"] },
+  { id: "p12", name: "セキュリティ監査対応", client: "セーフガードシステムズ株式会社", color: C.brand, phase: "要件定義", status: "on_hold", priority: "high", progress: 30, startDate: "2025-05-10", endDate: "2025-06-18", nextDue: "2025-05-18", sortOrder: 12, memberIds: ["m-yamada", "m-suzuki"] },
 ];
 
 /* ===== ボード列 ===== */
@@ -68,50 +68,38 @@ type TaskSeed = Omit<Task, "boardColumnId" | "boardPosition" | "isMilestone"> &
   Partial<Pick<Task, "isMilestone">>;
 
 const seed: TaskSeed[] = [
-  // --- p1 新規業務改革 ---
-  { id: "t1-4", projectId: "p1", parentTaskId: null, title: "ステークホルダーヒアリング", status: "done", priority: "medium", progress: 100, startDate: "2025-05-07", dueDate: "2025-05-12", sortOrder: 1, assigneeIds: ["m-suzuki"] },
-  { id: "t1-1", projectId: "p1", parentTaskId: null, title: "要件定義書作成", status: "in_progress", priority: "high", progress: 65, startDate: "2025-05-12", dueDate: "2025-05-16", sortOrder: 2, assigneeIds: ["m-yamada"] },
-  { id: "t1-2", projectId: "p1", parentTaskId: null, title: "業務フロー分析", status: "in_progress", priority: "medium", progress: 50, startDate: "2025-05-12", dueDate: "2025-05-19", sortOrder: 3, assigneeIds: ["m-sato"] },
-  { id: "t1-3", projectId: "p1", parentTaskId: null, title: "提案書ドラフト提出", status: "todo", priority: "high", progress: 0, startDate: "2025-05-19", dueDate: "2025-05-23", sortOrder: 4, assigneeIds: ["m-yamada"] },
-  { id: "t1-m", projectId: "p1", parentTaskId: null, title: "要件定義レビュー", status: "todo", priority: "high", progress: 0, startDate: "2025-05-20", dueDate: "2025-05-20", sortOrder: 5, assigneeIds: ["m-yamada"], isMilestone: true },
+  // --- p1 新規業務改革プロジェクト (65%) ---
+  { id: "t1-1", projectId: "p1", parentTaskId: null, title: "現状分析・要件定義", status: "done", priority: "high", progress: 100, startDate: "2025-04-28", dueDate: "2025-05-02", sortOrder: 1, assigneeIds: ["m-sato"] },
+  { id: "t1-2", projectId: "p1", parentTaskId: null, title: "業務フロー設計", status: "in_progress", priority: "high", progress: 80, startDate: "2025-05-05", dueDate: "2025-05-12", sortOrder: 2, assigneeIds: ["m-yamada"] },
+  { id: "t1-3", projectId: "p1", parentTaskId: null, title: "要件定義レビュー", status: "done", priority: "high", progress: 100, startDate: "2025-05-15", dueDate: "2025-05-15", sortOrder: 3, assigneeIds: ["m-suzuki"], isMilestone: true },
+  { id: "t1-4", projectId: "p1", parentTaskId: null, title: "新業務プロセス設計", status: "in_progress", priority: "medium", progress: 40, startDate: "2025-05-15", dueDate: "2025-05-22", sortOrder: 4, assigneeIds: ["m-tanaka"] },
+  { id: "t1-5", projectId: "p1", parentTaskId: null, title: "ユーザートレーニング準備", status: "todo", priority: "medium", progress: 0, startDate: "2025-05-22", dueDate: "2025-05-29", sortOrder: 5, assigneeIds: ["m-yamada"] },
 
-  // --- p2 CRM導入支援 ---
-  { id: "t2-1", projectId: "p2", parentTaskId: null, title: "現状システム調査", status: "done", priority: "medium", progress: 100, startDate: "2025-05-12", dueDate: "2025-05-15", sortOrder: 1, assigneeIds: ["m-sato"] },
-  { id: "t2-2", projectId: "p2", parentTaskId: null, title: "提案書ドラフト提出", status: "in_progress", priority: "high", progress: 40, startDate: "2025-05-15", dueDate: "2025-05-19", sortOrder: 2, assigneeIds: ["m-sato"] },
-  { id: "t2-3", projectId: "p2", parentTaskId: null, title: "基本設計書作成", status: "todo", priority: "medium", progress: 0, startDate: "2025-05-19", dueDate: "2025-05-27", sortOrder: 3, assigneeIds: ["m-tanaka"] },
-  { id: "t2-m", projectId: "p2", parentTaskId: null, title: "設計レビュー", status: "todo", priority: "medium", progress: 0, startDate: "2025-05-28", dueDate: "2025-05-28", sortOrder: 4, assigneeIds: ["m-sato"], isMilestone: true },
+  // --- p2 CRM導入支援 (45%) ---
+  { id: "t2-1", projectId: "p2", parentTaskId: null, title: "要件ヒアリング", status: "done", priority: "medium", progress: 100, startDate: "2025-04-28", dueDate: "2025-05-07", sortOrder: 1, assigneeIds: ["m-sato"] },
+  { id: "t2-2", projectId: "p2", parentTaskId: null, title: "業務フロー・設計", status: "in_progress", priority: "high", progress: 60, startDate: "2025-05-07", dueDate: "2025-05-16", sortOrder: 2, assigneeIds: ["m-yamada"] },
+  { id: "t2-3", projectId: "p2", parentTaskId: null, title: "システム設定・カスタマイズ", status: "in_progress", priority: "medium", progress: 30, startDate: "2025-05-16", dueDate: "2025-05-26", sortOrder: 3, assigneeIds: ["m-suzuki"] },
+  { id: "t2-4", projectId: "p2", parentTaskId: null, title: "テスト・ユーザー検証", status: "todo", priority: "medium", progress: 0, startDate: "2025-05-26", dueDate: "2025-05-30", sortOrder: 4, assigneeIds: ["m-tanaka"] },
+  { id: "t2-5", projectId: "p2", parentTaskId: null, title: "本番リリース・運用サポート", status: "todo", priority: "high", progress: 0, startDate: "2025-05-30", dueDate: "2025-06-02", sortOrder: 5, assigneeIds: ["m-sato"] },
 
-  // --- p3 基幹システム刷新 ---
-  { id: "t3-1", projectId: "p3", parentTaskId: null, title: "DB設計", status: "in_progress", priority: "high", progress: 55, startDate: "2025-05-05", dueDate: "2025-05-23", sortOrder: 1, assigneeIds: ["m-suzuki"] },
-  { id: "t3-2", projectId: "p3", parentTaskId: null, title: "API実装", status: "todo", priority: "high", progress: 0, startDate: "2025-05-23", dueDate: "2025-06-10", sortOrder: 2, assigneeIds: ["m-takahashi"] },
-  { id: "t3-3", projectId: "p3", parentTaskId: null, title: "移行計画策定", status: "in_progress", priority: "medium", progress: 30, startDate: "2025-05-12", dueDate: "2025-05-21", sortOrder: 3, assigneeIds: ["m-yamada"] },
+  // --- p3 基幹システム刷新 (30%) ---
+  { id: "t3-1", projectId: "p3", parentTaskId: null, title: "要件定義・RFP作成", status: "done", priority: "high", progress: 100, startDate: "2025-04-28", dueDate: "2025-05-08", sortOrder: 1, assigneeIds: ["m-yamada"] },
+  { id: "t3-2", projectId: "p3", parentTaskId: null, title: "ベンダー選定", status: "in_progress", priority: "medium", progress: 60, startDate: "2025-05-08", dueDate: "2025-05-20", sortOrder: 2, assigneeIds: ["m-suzuki"] },
+  { id: "t3-3", projectId: "p3", parentTaskId: null, title: "設計・開発", status: "in_progress", priority: "high", progress: 10, startDate: "2025-05-20", dueDate: "2025-06-06", sortOrder: 3, assigneeIds: ["m-tanaka"] },
+  { id: "t3-4", projectId: "p3", parentTaskId: null, title: "テスト・受入検証", status: "todo", priority: "medium", progress: 0, startDate: "2025-06-06", dueDate: "2025-06-13", sortOrder: 4, assigneeIds: ["m-sato"] },
+  { id: "t3-5", projectId: "p3", parentTaskId: null, title: "移行・本番切替", status: "todo", priority: "high", progress: 0, startDate: "2025-06-13", dueDate: "2025-06-20", sortOrder: 5, assigneeIds: ["m-yamada"] },
 
-  // --- p4 補助金LP改善 ---
-  { id: "t4-1", projectId: "p4", parentTaskId: null, title: "デザインカンプ作成", status: "in_progress", priority: "medium", progress: 70, startDate: "2025-05-07", dueDate: "2025-05-21", sortOrder: 1, assigneeIds: ["m-tanaka"] },
-  { id: "t4-2", projectId: "p4", parentTaskId: null, title: "コーディング", status: "todo", priority: "medium", progress: 0, startDate: "2025-05-21", dueDate: "2025-05-29", sortOrder: 2, assigneeIds: ["m-suzuki"] },
+  // --- p4 補助金LP改善 (70%) ---
+  { id: "t4-1", projectId: "p4", parentTaskId: null, title: "現状分析・改善案策定", status: "done", priority: "medium", progress: 100, startDate: "2025-04-28", dueDate: "2025-05-06", sortOrder: 1, assigneeIds: ["m-tanaka"] },
+  { id: "t4-2", projectId: "p4", parentTaskId: null, title: "デザイン制作", status: "in_progress", priority: "high", progress: 90, startDate: "2025-05-06", dueDate: "2025-05-14", sortOrder: 2, assigneeIds: ["m-sato"] },
+  { id: "t4-3", projectId: "p4", parentTaskId: null, title: "コーディング・実装", status: "in_progress", priority: "medium", progress: 50, startDate: "2025-05-14", dueDate: "2025-05-23", sortOrder: 3, assigneeIds: ["m-yamada"] },
+  { id: "t4-4", projectId: "p4", parentTaskId: null, title: "検証・公開", status: "todo", priority: "medium", progress: 0, startDate: "2025-05-23", dueDate: "2025-05-28", sortOrder: 4, assigneeIds: ["m-suzuki"] },
 
-  // --- p6 営業資料リニューアル ---
-  { id: "t6-1", projectId: "p6", parentTaskId: null, title: "最終校正", status: "in_progress", priority: "medium", progress: 90, startDate: "2025-05-12", dueDate: "2025-05-16", sortOrder: 1, assigneeIds: ["m-tanaka"] },
-  { id: "t6-2", projectId: "p6", parentTaskId: null, title: "クライアント確認", status: "todo", priority: "high", progress: 0, startDate: "2025-05-16", dueDate: "2025-05-19", sortOrder: 2, assigneeIds: ["m-sato"] },
-
-  // --- p7 問い合わせフォーム改善 (完了) ---
-  { id: "t7-1", projectId: "p7", parentTaskId: null, title: "受け入れテスト", status: "done", priority: "low", progress: 100, startDate: "2025-05-01", dueDate: "2025-05-09", sortOrder: 1, assigneeIds: ["m-suzuki"] },
-
-  // --- p8 ECサイト構築 ---
-  { id: "t8-1", projectId: "p8", parentTaskId: null, title: "カート機能実装", status: "in_progress", priority: "high", progress: 60, startDate: "2025-05-08", dueDate: "2025-05-22", sortOrder: 1, assigneeIds: ["m-suzuki"] },
-  { id: "t8-2", projectId: "p8", parentTaskId: null, title: "決済連携", status: "todo", priority: "high", progress: 0, startDate: "2025-05-22", dueDate: "2025-06-06", sortOrder: 2, assigneeIds: ["m-suzuki"] },
-  { id: "t8-3", projectId: "p8", parentTaskId: null, title: "商品ページデザイン", status: "in_progress", priority: "medium", progress: 45, startDate: "2025-05-10", dueDate: "2025-05-20", sortOrder: 3, assigneeIds: ["m-tanaka"] },
-
-  // --- p9 マーケティング分析基盤 ---
-  { id: "t9-1", projectId: "p9", parentTaskId: null, title: "データ連携設計", status: "in_progress", priority: "medium", progress: 50, startDate: "2025-05-08", dueDate: "2025-05-26", sortOrder: 1, assigneeIds: ["m-takahashi"] },
-
-  // --- p10 採用サイトリニューアル ---
-  { id: "t10-1", projectId: "p10", parentTaskId: null, title: "ワイヤーフレーム作成", status: "done", priority: "medium", progress: 100, startDate: "2025-04-30", dueDate: "2025-05-10", sortOrder: 1, assigneeIds: ["m-tanaka"] },
-  { id: "t10-2", projectId: "p10", parentTaskId: null, title: "トップページ制作", status: "in_progress", priority: "medium", progress: 55, startDate: "2025-05-10", dueDate: "2025-05-24", sortOrder: 2, assigneeIds: ["m-tanaka"] },
-
-  // --- p12 セキュリティ監査対応 ---
-  { id: "t12-1", projectId: "p12", parentTaskId: null, title: "脆弱性診断", status: "in_progress", priority: "high", progress: 35, startDate: "2025-05-10", dueDate: "2025-05-18", sortOrder: 1, assigneeIds: ["m-suzuki"] },
-  { id: "t12-2", projectId: "p12", parentTaskId: null, title: "対応方針ドキュメント作成", status: "todo", priority: "high", progress: 0, startDate: "2025-05-18", dueDate: "2025-05-30", sortOrder: 2, assigneeIds: ["m-yamada"] },
+  // --- p5 社内業務効率化 (55%) ---
+  { id: "t5-1", projectId: "p5", parentTaskId: null, title: "課題洗い出し・優先順位付け", status: "done", priority: "medium", progress: 100, startDate: "2025-04-28", dueDate: "2025-05-05", sortOrder: 1, assigneeIds: ["m-suzuki"] },
+  { id: "t5-2", projectId: "p5", parentTaskId: null, title: "ツール選定", status: "in_progress", priority: "medium", progress: 60, startDate: "2025-05-05", dueDate: "2025-05-19", sortOrder: 2, assigneeIds: ["m-tanaka"] },
+  { id: "t5-3", projectId: "p5", parentTaskId: null, title: "運用設計・ルール整備", status: "in_progress", priority: "medium", progress: 30, startDate: "2025-05-19", dueDate: "2025-05-30", sortOrder: 3, assigneeIds: ["m-yamada"] },
+  { id: "t5-4", projectId: "p5", parentTaskId: null, title: "トレーニング・展開", status: "todo", priority: "low", progress: 0, startDate: "2025-05-30", dueDate: "2025-06-10", sortOrder: 4, assigneeIds: ["m-sato"] },
 ];
 
 export const tasks: Task[] = seed.map((t, i) => ({
@@ -125,23 +113,32 @@ export const tasks: Task[] = seed.map((t, i) => ({
 
 /* ===== マイルストーン ===== */
 export const milestones: Milestone[] = [
-  { id: "ms-1", projectId: "p1", title: "要件定義レビュー", dueDate: "2025-05-20", isDone: false },
-  { id: "ms-2", projectId: "p2", title: "設計レビュー", dueDate: "2025-05-28", isDone: false },
-  { id: "ms-3", projectId: "p6", title: "納品", dueDate: "2025-05-16", isDone: false },
-  { id: "ms-4", projectId: "p3", title: "開発フェーズ開始", dueDate: "2025-05-23", isDone: false },
-  { id: "ms-5", projectId: "p8", title: "α版リリース", dueDate: "2025-05-22", isDone: false },
-  { id: "ms-6", projectId: "p12", title: "監査報告書提出", dueDate: "2025-05-30", isDone: false },
+  { id: "ms-1", projectId: "p1", title: "要件定義レビュー", dueDate: "2025-05-16", isDone: false },
+  { id: "ms-2", projectId: "p2", title: "業務フロー・設計 完了", dueDate: "2025-05-17", isDone: false },
+  { id: "ms-3", projectId: "p3", title: "設計・開発 フェーズ完了", dueDate: "2025-05-20", isDone: false },
+  { id: "ms-4", projectId: "p4", title: "コーディング・実装 完了", dueDate: "2025-05-23", isDone: false },
+  { id: "ms-5", projectId: "p2", title: "テスト・ユーザー検証 開始", dueDate: "2025-05-30", isDone: false },
 ];
 
-/* ===== ガント依存関係 ===== */
+/* ===== ガント依存関係 (各プロジェクトの順次依存) ===== */
 export const dependencies: TaskDependency[] = [
-  { id: "d1", predecessorId: "t1-4", successorId: "t1-1" },
-  { id: "d2", predecessorId: "t1-1", successorId: "t1-3" },
-  { id: "d3", predecessorId: "t2-1", successorId: "t2-2" },
-  { id: "d4", predecessorId: "t2-2", successorId: "t2-3" },
-  { id: "d5", predecessorId: "t3-1", successorId: "t3-2" },
-  { id: "d6", predecessorId: "t8-1", successorId: "t8-2" },
-  { id: "d7", predecessorId: "t12-1", successorId: "t12-2" },
+  { id: "d1-1", predecessorId: "t1-1", successorId: "t1-2" },
+  { id: "d1-2", predecessorId: "t1-2", successorId: "t1-4" },
+  { id: "d1-3", predecessorId: "t1-4", successorId: "t1-5" },
+  { id: "d2-1", predecessorId: "t2-1", successorId: "t2-2" },
+  { id: "d2-2", predecessorId: "t2-2", successorId: "t2-3" },
+  { id: "d2-3", predecessorId: "t2-3", successorId: "t2-4" },
+  { id: "d2-4", predecessorId: "t2-4", successorId: "t2-5" },
+  { id: "d3-1", predecessorId: "t3-1", successorId: "t3-2" },
+  { id: "d3-2", predecessorId: "t3-2", successorId: "t3-3" },
+  { id: "d3-3", predecessorId: "t3-3", successorId: "t3-4" },
+  { id: "d3-4", predecessorId: "t3-4", successorId: "t3-5" },
+  { id: "d4-1", predecessorId: "t4-1", successorId: "t4-2" },
+  { id: "d4-2", predecessorId: "t4-2", successorId: "t4-3" },
+  { id: "d4-3", predecessorId: "t4-3", successorId: "t4-4" },
+  { id: "d5-1", predecessorId: "t5-1", successorId: "t5-2" },
+  { id: "d5-2", predecessorId: "t5-2", successorId: "t5-3" },
+  { id: "d5-3", predecessorId: "t5-3", successorId: "t5-4" },
 ];
 
 /* ===== 今週のアクション ===== */

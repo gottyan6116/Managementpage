@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="900" viewBox="0 0 300 900" preserveAspectRatio="xMidYMax slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#bcd6f5" stop-opacity="0.0"/>
+      <stop offset="0.55" stop-color="#cfe2f7" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#eaf3fc" stop-opacity="0.5"/>
+    </linearGradient>
+    <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9cc2ec" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#d6e8fa" stop-opacity="0.65"/>
+    </linearGradient>
+  </defs>
+
+  <!-- sky wash -->
+  <rect x="0" y="0" width="300" height="900" fill="url(#sky)"/>
+
+  <!-- far range -->
+  <path d="M0 560 L55 470 L110 520 L165 440 L220 500 L300 430 L300 620 L0 620 Z"
+        fill="#ffffff" opacity="0.22"/>
+  <!-- mid range -->
+  <path d="M0 600 L70 500 L130 560 L190 480 L250 540 L300 500 L300 660 L0 660 Z"
+        fill="#ffffff" opacity="0.3"/>
+  <!-- near range with snow caps -->
+  <path d="M0 660 L60 540 L120 640 L175 545 L235 635 L300 560 L300 720 L0 720 Z"
+        fill="#ffffff" opacity="0.42"/>
+  <path d="M50 558 L60 540 L72 560 L64 556 L57 564 Z" fill="#ffffff" opacity="0.7"/>
+  <path d="M166 562 L175 545 L186 566 L178 560 L171 568 Z" fill="#ffffff" opacity="0.7"/>
+
+  <!-- lake -->
+  <rect x="0" y="700" width="300" height="200" fill="url(#lake)"/>
+  <!-- reflection streaks -->
+  <g fill="#ffffff" opacity="0.18">
+    <rect x="40" y="724" width="90" height="4" rx="2"/>
+    <rect x="150" y="744" width="120" height="4" rx="2"/>
+    <rect x="20" y="770" width="140" height="3" rx="1.5"/>
+    <rect x="120" y="800" width="150" height="3" rx="1.5"/>
+  </g>
+</svg>
