@@ -1,24 +1,64 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Hexagon } from "lucide-react";
 import { NAV_ITEMS } from "./nav";
-import { useUiStore } from "@/stores/ui-store";
+import {
+  SIDEBAR_WIDTH_COLLAPSED,
+  useUiStore,
+} from "@/stores/ui-store";
 import { self } from "@/lib/repositories";
 import { cn } from "@/lib/utils";
 
 export function Sidebar() {
   const pathname = usePathname();
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
+  const sidebarWidth = useUiStore((s) => s.sidebarWidth);
+  const setSidebarWidth = useUiStore((s) => s.setSidebarWidth);
   const me = self();
+
+  const [resizing, setResizing] = useState(false);
+  const startX = useRef(0);
+  const startW = useRef(0);
+
+  useEffect(() => {
+    if (!resizing) return;
+    function onMove(e: PointerEvent) {
+      setSidebarWidth(startW.current + (e.clientX - startX.current));
+    }
+    function onUp() {
+      setResizing(false);
+    }
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [resizing, setSidebarWidth]);
+
+  function beginResize(e: React.PointerEvent) {
+    e.preventDefault();
+    startX.current = e.clientX;
+    startW.current = sidebarWidth;
+    setResizing(true);
+  }
+
+  const width = collapsed ? SIDEBAR_WIDTH_COLLAPSED : sidebarWidth;
 
   return (
     <aside
       className={cn(
-        "relative shrink-0 transition-[width] duration-300 ease-out",
-        collapsed ? "w-20" : "w-[248px]",
+        "relative shrink-0 ease-out",
+        !resizing && "transition-[width] duration-300",
       )}
+      style={{ width }}
     >
       <div className="sticky top-0 h-screen p-3">
         <div
@@ -123,6 +163,26 @@ export function Sidebar() {
           </div>
         </div>
       </div>
+
+      {/* 幅調整ハンドル (折りたたみ時は非表示) */}
+      {!collapsed && (
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="サイドバーの幅を調整"
+          onPointerDown={beginResize}
+          onDoubleClick={() => setSidebarWidth(248)}
+          title="ドラッグで幅調整（ダブルクリックで初期値）"
+          className="group absolute top-0 right-0 h-full w-2 cursor-col-resize z-30"
+        >
+          <span
+            className={cn(
+              "absolute inset-y-0 right-0 w-0.5 transition-colors",
+              resizing ? "bg-brand-500" : "bg-transparent group-hover:bg-brand-400/70",
+            )}
+          />
+        </div>
+      )}
     </aside>
   );
 }

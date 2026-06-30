@@ -6,6 +6,9 @@ interface UiState {
   toggleSidebar: () => void;
   setSidebarCollapsed: (v: boolean) => void;
 
+  sidebarWidth: number;
+  setSidebarWidth: (v: number) => void;
+
   commandPaletteOpen: boolean;
   setCommandPaletteOpen: (v: boolean) => void;
 
@@ -17,11 +20,22 @@ export const GANTT_DAY_WIDTH_DEFAULT = 28;
 export const GANTT_DAY_WIDTH_MIN = 16;
 export const GANTT_DAY_WIDTH_MAX = 48;
 
+export const SIDEBAR_WIDTH_DEFAULT = 248;
+export const SIDEBAR_WIDTH_MIN = 200;
+export const SIDEBAR_WIDTH_MAX = 400;
+export const SIDEBAR_WIDTH_COLLAPSED = 80;
+
 export const useUiStore = create<UiState>((set) => ({
   sidebarCollapsed: false,
   toggleSidebar: () =>
     set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
   setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
+
+  sidebarWidth: SIDEBAR_WIDTH_DEFAULT,
+  setSidebarWidth: (v) =>
+    set({
+      sidebarWidth: Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, v)),
+    }),
 
   commandPaletteOpen: false,
   setCommandPaletteOpen: (v) => set({ commandPaletteOpen: v }),
