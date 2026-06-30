@@ -118,8 +118,15 @@ export interface FileItem {
   createdAt: string;
 }
 
+export interface NoteSection {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface Note {
   id: string;
+  sectionId: string;
   title: string | null;
   body: string;
   color: string;

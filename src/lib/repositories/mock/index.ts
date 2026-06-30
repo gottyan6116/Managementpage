@@ -16,7 +16,7 @@ import type {
   ProjectStatus,
   Task,
 } from "@/types/domain";
-import type { DocumentItem, FileItem, Note } from "@/types/domain";
+import type { DocumentItem, FileItem, Note, NoteSection } from "@/types/domain";
 import {
   actions,
   boardColumns,
@@ -27,6 +27,7 @@ import {
   kpiSeries,
   members,
   milestones,
+  noteSections,
   notes,
   notifications,
   projects,
@@ -298,4 +299,78 @@ export async function toggleNotePin(id: string): Promise<void> {
   await delay();
   const n = notes.find((x) => x.id === id);
   if (n) n.isPinned = !n.isPinned;
+}
+
+export async function listNoteSections(): Promise<NoteSection[]> {
+  await delay();
+  return noteSections;
+}
+
+export async function updateNote(
+  id: string,
+  patch: { title?: string | null; body?: string },
+): Promise<void> {
+  await delay();
+  const n = notes.find((x) => x.id === id);
+  if (!n) return;
+  if (patch.title !== undefined) n.title = patch.title;
+  if (patch.body !== undefined) n.body = patch.body;
+  n.updatedAt = new Date().toISOString().slice(0, 10);
+}
+
+export async function createNote(sectionId: string): Promise<Note> {
+  await delay();
+  const note: Note = {
+    id: `note-${Date.now()}`,
+    sectionId,
+    title: "無題のページ",
+    body: "",
+    color: "#FFFFFF",
+    isPinned: false,
+    updatedAt: new Date().toISOString().slice(0, 10),
+  };
+  notes.unshift(note);
+  return note;
+}
+
+/* ===== ガント: タイトル編集・削除 ===== */
+export async function updateTaskTitle(id: string, title: string): Promise<void> {
+  await delay();
+  const t = tasks.find((x) => x.id === id);
+  if (t) t.title = title;
+}
+
+export async function updateProjectName(id: string, name: string): Promise<void> {
+  await delay();
+  const p = projects.find((x) => x.id === id);
+  if (p) p.name = name;
+}
+
+export async function deleteTask(id: string): Promise<void> {
+  await delay();
+  const i = tasks.findIndex((t) => t.id === id);
+  if (i >= 0) tasks.splice(i, 1);
+  for (let k = dependencies.length - 1; k >= 0; k--) {
+    if (dependencies[k].predecessorId === id || dependencies[k].successorId === id) {
+      dependencies.splice(k, 1);
+    }
+  }
+}
+
+export async function deleteProject(id: string): Promise<void> {
+  await delay();
+  const childIds = tasks.filter((t) => t.projectId === id).map((t) => t.id);
+  for (let k = tasks.length - 1; k >= 0; k--) {
+    if (tasks[k].projectId === id) tasks.splice(k, 1);
+  }
+  for (let k = dependencies.length - 1; k >= 0; k--) {
+    if (
+      childIds.includes(dependencies[k].predecessorId) ||
+      childIds.includes(dependencies[k].successorId)
+    ) {
+      dependencies.splice(k, 1);
+    }
+  }
+  const pi = projects.findIndex((p) => p.id === id);
+  if (pi >= 0) projects.splice(pi, 1);
 }

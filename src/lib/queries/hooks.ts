@@ -27,6 +27,7 @@ export const qk = {
   documents: ["documents"] as const,
   files: ["files"] as const,
   notes: ["notes"] as const,
+  noteSections: ["note-sections"] as const,
 };
 
 export function useMembers() {
@@ -91,6 +92,78 @@ export function useFiles() {
 
 export function useNotes() {
   return useQuery({ queryKey: qk.notes, queryFn: repo.listNotes });
+}
+
+export function useNoteSections() {
+  return useQuery({ queryKey: qk.noteSections, queryFn: repo.listNoteSections });
+}
+
+/** メモ本文/タイトルの編集 (楽観的更新) */
+export function useUpdateNote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: { title?: string | null; body?: string };
+    }) => repo.updateNote(id, patch),
+    onMutate: async ({ id, patch }) => {
+      await qc.cancelQueries({ queryKey: qk.notes });
+      const prev = qc.getQueryData<Note[]>(qk.notes);
+      qc.setQueryData<Note[]>(qk.notes, (old) =>
+        old?.map((n) => (n.id === id ? { ...n, ...patch } : n)),
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(qk.notes, ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: qk.notes }),
+  });
+}
+
+export function useCreateNote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (sectionId: string) => repo.createNote(sectionId),
+    onSettled: () => qc.invalidateQueries({ queryKey: qk.notes }),
+  });
+}
+
+/** ガント行のリネーム (タスク/プロジェクト) */
+export function useRenameGanttRow() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, type, title }: { id: string; type: "task" | "project"; title: string }) =>
+      type === "task" ? repo.updateTaskTitle(id, title) : repo.updateProjectName(id, title),
+    onMutate: async ({ id, title }) => {
+      await qc.cancelQueries({ queryKey: ["gantt"] });
+      qc.setQueriesData<GanttRow[]>({ queryKey: ["gantt"] }, (old) =>
+        old?.map((r) => (r.id === id ? { ...r, label: title } : r)),
+      );
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["gantt"] });
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+}
+
+/** ガント行の削除 (タスク/プロジェクト) */
+export function useDeleteGanttRow() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, type }: { id: string; type: "task" | "project" }) =>
+      type === "task" ? repo.deleteTask(id) : repo.deleteProject(id),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["gantt"] });
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
 }
 
 /** メモのピン留めトグル (楽観的更新) */

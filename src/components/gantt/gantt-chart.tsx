@@ -3,13 +3,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Trash2 } from "lucide-react";
 import { Avatar } from "@/components/shared/avatar";
 import { StatusBadge } from "@/components/shared/badges";
 import {
+  useDeleteGanttRow,
   useDependencies,
   useGanttRows,
   useMembers,
+  useRenameGanttRow,
   useUpdateTaskSchedule,
 } from "@/lib/queries/hooks";
 import { APP_TODAY } from "@/lib/date";
@@ -67,6 +69,8 @@ export function GanttChart({
   const { data: deps } = useDependencies();
   const { data: members } = useMembers();
   const editSchedule = useUpdateTaskSchedule();
+  const renameRow = useRenameGanttRow();
+  const deleteRow = useDeleteGanttRow();
   const storeDayWidth = useUiStore((s) => s.ganttDayWidth);
   const dayWidth = variant === "preview" ? 22 : storeDayWidth;
 
@@ -193,7 +197,10 @@ export function GanttChart({
               key={row.id}
               row={row}
               showCols={showLeftCols}
+              editable={editable}
               member={memberMap.get(row.assigneeIds[0] ?? "")}
+              onRename={(title) => renameRow.mutate({ id: row.id, type: row.type, title })}
+              onDelete={() => deleteRow.mutate({ id: row.id, type: row.type })}
             />
           ))}
         </div>
@@ -329,17 +336,40 @@ export function GanttChart({
 function LeftRow({
   row,
   showCols,
+  editable,
   member,
+  onRename,
+  onDelete,
 }: {
   row: GanttRow;
   showCols: boolean;
+  editable: boolean;
   member?: { id: string; name: string; color: string; avatarUrl: string | null };
+  onRename: (title: string) => void;
+  onDelete: () => void;
 }) {
   const isProject = row.type === "project";
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(row.label);
+
+  function commit() {
+    const v = value.trim();
+    if (v && v !== row.label) onRename(v);
+    else setValue(row.label);
+    setEditing(false);
+  }
+
+  function handleDelete() {
+    if (isProject) {
+      if (!window.confirm(`「${row.label}」とその配下のタスクを削除しますか？`)) return;
+    }
+    onDelete();
+  }
+
   return (
     <div
       className={cn(
-        "flex items-center gap-2 px-4 border-b border-line/40",
+        "group relative flex items-center gap-2 px-4 border-b border-line/40",
         isProject ? "bg-surface-muted/40" : "bg-surface",
       )}
       style={{ height: GANTT_ROW_HEIGHT }}
@@ -354,16 +384,44 @@ function LeftRow({
           <span className="w-3.5 shrink-0" />
         )}
         <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
-        <span
-          className={cn(
-            "truncate text-sm",
-            isProject ? "font-semibold text-ink" : "text-ink-soft",
-          )}
-        >
-          {row.label}
-        </span>
+        {editing ? (
+          <input
+            autoFocus
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commit();
+              if (e.key === "Escape") {
+                setValue(row.label);
+                setEditing(false);
+              }
+            }}
+            className={cn(
+              "min-w-0 flex-1 rounded-md border border-brand-400 bg-white px-1.5 py-0.5 text-sm outline-none",
+              isProject ? "font-semibold text-ink" : "text-ink",
+            )}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              if (!editable) return;
+              setValue(row.label);
+              setEditing(true);
+            }}
+            title={editable ? "クリックで名称を編集" : undefined}
+            className={cn(
+              "truncate text-sm text-left min-w-0",
+              isProject ? "font-semibold text-ink" : "text-ink-soft",
+              editable && "hover:text-brand-600 cursor-text",
+            )}
+          >
+            {row.label}
+          </button>
+        )}
       </div>
-      {showCols && (
+      {showCols && !editing && (
         <>
           <span className="w-14 flex justify-center">
             {member && <Avatar member={member} size="sm" />}
@@ -375,6 +433,17 @@ function LeftRow({
             <StatusBadge status={row.status} />
           </span>
         </>
+      )}
+      {editable && !editing && (
+        <button
+          type="button"
+          onClick={handleDelete}
+          aria-label={`${row.label}を削除`}
+          title="削除"
+          className="absolute right-2 inline-flex items-center justify-center size-7 rounded-lg bg-surface text-ink-muted opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition"
+        >
+          <Trash2 className="size-4" />
+        </button>
       )}
     </div>
   );

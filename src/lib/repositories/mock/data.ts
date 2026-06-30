@@ -13,6 +13,7 @@ import type {
   Member,
   Milestone,
   Note,
+  NoteSection,
   Project,
   Task,
   TaskDependency,
@@ -223,14 +224,23 @@ export const files: FileItem[] = [
   { id: "f8", projectId: "p4", name: "デザインカンプ.png", mimeType: "image/png", sizeBytes: 4_100_000, createdAt: "2025-05-09" },
 ];
 
-/* ===== メモ ===== */
+/* ===== メモ: セクション (OneNote 風) ===== */
+export const noteSections: NoteSection[] = [
+  { id: "sec-work", name: "業務メモ", color: "#7719AA" },
+  { id: "sec-ideas", name: "アイデア", color: "#107C41" },
+  { id: "sec-clients", name: "クライアント", color: "#0F6CBD" },
+  { id: "sec-personal", name: "個人", color: "#CA5010" },
+];
+
+/* ===== メモ (ページ) ===== */
 export const notes: Note[] = [
-  { id: "note1", title: "今週やること", body: "・要件定義レビュー準備\n・CRM提案書を仕上げる\n・請求書を送付", color: "#FEF3C7", isPinned: true, updatedAt: "2025-05-16" },
-  { id: "note2", title: "クライアント連絡メモ", body: "グローバルHD様：次回MTGは5/22。資料は前日までに共有。", color: "#DBEAFE", isPinned: true, updatedAt: "2025-05-15" },
-  { id: "note3", title: "改善アイデア", body: "ダッシュボードに稼働率の推移グラフを追加したい。", color: "#DCFCE7", isPinned: false, updatedAt: "2025-05-14" },
-  { id: "note4", title: null, body: "参考: 競合のガント実装が分かりやすい。後で調査。", color: "#FCE7F3", isPinned: false, updatedAt: "2025-05-13" },
-  { id: "note5", title: "請求まわり", body: "5月分の請求は月末締め。p6とp7は完了案件として計上。", color: "#F1F5F9", isPinned: false, updatedAt: "2025-05-12" },
-  { id: "note6", title: "採用サイト", body: "トップのキービジュアルは田中さんが5/24までに。", color: "#FFEDD5", isPinned: false, updatedAt: "2025-05-11" },
+  { id: "note1", sectionId: "sec-work", title: "今週やること", body: "・要件定義レビュー準備\n・CRM提案書を仕上げる\n・請求書を送付\n\n優先度高: 要件定義レビュー（5/16）", color: "#FEF3C7", isPinned: true, updatedAt: "2025-05-16" },
+  { id: "note5", sectionId: "sec-work", title: "請求まわり", body: "5月分の請求は月末締め。\n完了案件として計上する案件を整理する。", color: "#F1F5F9", isPinned: false, updatedAt: "2025-05-12" },
+  { id: "note3", sectionId: "sec-ideas", title: "改善アイデア", body: "ダッシュボードに稼働率の推移グラフを追加したい。\n\n・週次の稼働率トレンド\n・メンバー別の負荷ヒートマップ", color: "#DCFCE7", isPinned: false, updatedAt: "2025-05-14" },
+  { id: "note4", sectionId: "sec-ideas", title: "リサーチメモ", body: "競合のガント実装が分かりやすい。後で調査する。\nドラッグ編集とクリティカルパス表示が参考になりそう。", color: "#FCE7F3", isPinned: false, updatedAt: "2025-05-13" },
+  { id: "note2", sectionId: "sec-clients", title: "グローバルHD 連絡メモ", body: "次回MTGは5/22（木）14:00。\n資料は前日までに共有すること。\n窓口: 経営企画部 田中様", color: "#DBEAFE", isPinned: true, updatedAt: "2025-05-15" },
+  { id: "note6", sectionId: "sec-clients", title: "採用サイト案件", body: "トップのキービジュアルは田中さんが5/24までに準備。\n初稿レビューはオンラインで。", color: "#FFEDD5", isPinned: false, updatedAt: "2025-05-11" },
+  { id: "note7", sectionId: "sec-personal", title: "読みたい本・記事", body: "・プロジェクトマネジメントの教科書\n・SaaS グロースの記事まとめ", color: "#FEF9C3", isPinned: false, updatedAt: "2025-05-10" },
 ];
 
 /** KPI のスパークライン用ダミー系列 */
