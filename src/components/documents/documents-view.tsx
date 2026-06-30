@@ -1,97 +1,108 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { FileText, Pencil, Plus } from "lucide-react";
-import { Markdown } from "@/components/shared/markdown";
-import { useDocuments, useProjects } from "@/lib/queries/hooks";
+import { useMemo } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { FileText, Plus } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
+import { useCreateDocument, useDocuments, useProjects } from "@/lib/queries/hooks";
 import { formatDue } from "@/lib/date";
-import { cn } from "@/lib/utils";
 
 export function DocumentsView() {
-  const { data: documents } = useDocuments();
+  const router = useRouter();
+  const { data: documents, isLoading } = useDocuments();
   const { data: projects } = useProjects("all");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const createDoc = useCreateDocument();
 
   const projectMap = useMemo(() => new Map(projects?.map((p) => [p.id, p])), [projects]);
 
-  // 未選択時は先頭を表示 (effect での setState を避ける)
-  const selected =
-    documents?.find((d) => d.id === selectedId) ?? documents?.[0];
-  const selProject = selected?.projectId ? projectMap.get(selected.projectId) : undefined;
+  function addDocument() {
+    createDoc.mutate(undefined, {
+      onSuccess: (doc) => router.push(`/documents/${doc.id}`),
+    });
+  }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-5 items-start">
-      {/* 一覧 */}
-      <div className="rounded-2xl bg-surface border border-line shadow-card overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-line">
-          <h2 className="text-base font-semibold text-ink">ドキュメント</h2>
-          <button className="inline-flex items-center gap-1 h-8 rounded-lg bg-brand-600 hover:bg-brand-700 px-2.5 text-xs font-semibold text-white transition-colors">
-            <Plus className="size-3.5" />
-            新規
-          </button>
-        </div>
-        <ul className="max-h-[560px] overflow-y-auto">
-          {documents?.map((doc) => {
-            const project = doc.projectId ? projectMap.get(doc.projectId) : undefined;
-            const active = doc.id === selected?.id;
-            return (
-              <li key={doc.id}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedId(doc.id)}
-                  className={cn(
-                    "w-full flex items-start gap-3 px-5 py-3.5 text-left border-b border-line/60 transition-colors",
-                    active ? "bg-brand-50" : "hover:bg-surface-muted/60",
-                  )}
-                >
-                  <span
-                    className="mt-0.5 inline-flex items-center justify-center size-8 rounded-lg shrink-0"
-                    style={{
-                      backgroundColor: `${project?.color ?? "#3B82F6"}1A`,
-                      color: project?.color ?? "#3B82F6",
-                    }}
-                  >
-                    <FileText className="size-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className={cn("text-sm font-medium truncate", active ? "text-brand-700" : "text-ink")}>
-                      {doc.title}
-                    </p>
-                    <p className="text-xs text-ink-muted truncate">
-                      {project?.name ?? "未分類"} ・ {formatDue(doc.updatedAt)}
-                    </p>
-                  </div>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+    <div className="rounded-2xl bg-surface border border-line shadow-card overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-line">
+        <h2 className="text-base font-semibold text-ink">ドキュメント一覧</h2>
+        <button
+          type="button"
+          onClick={addDocument}
+          className="inline-flex items-center gap-1.5 h-9 rounded-lg bg-brand-600 hover:bg-brand-700 px-3.5 text-sm font-semibold text-white transition-colors"
+        >
+          <Plus className="size-4" />
+          新規ドキュメント
+        </button>
       </div>
 
-      {/* プレビュー */}
-      <div className="rounded-2xl bg-surface border border-line shadow-card min-h-[400px]">
-        {selected ? (
-          <article className="p-8">
-            <header className="flex items-start justify-between gap-4 pb-4 mb-4 border-b border-line">
-              <div className="min-w-0">
-                <h1 className="text-xl font-bold text-ink">{selected.title}</h1>
-                <p className="text-xs text-ink-muted mt-1">
-                  {selProject?.name ?? "未分類"} ・ 更新 {formatDue(selected.updatedAt)}
-                </p>
-              </div>
-              <button className="inline-flex items-center gap-1.5 h-9 rounded-lg border border-line px-3 text-sm font-medium text-ink-soft hover:bg-surface-muted transition-colors shrink-0">
-                <Pencil className="size-4" />
-                編集
-              </button>
-            </header>
-            <Markdown source={selected.body} />
-          </article>
-        ) : (
-          <div className="flex items-center justify-center h-80 text-sm text-ink-muted">
-            ドキュメントを選択してください
-          </div>
-        )}
-      </div>
+      {isLoading ? (
+        <div className="divide-y divide-line/60">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-16 animate-pulse bg-surface-muted/40" />
+          ))}
+        </div>
+      ) : documents && documents.length > 0 ? (
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-ink-muted border-b border-line">
+              <th className="py-2.5 pl-5 font-medium">タイトル</th>
+              <th className="py-2.5 font-medium">プロジェクト</th>
+              <th className="py-2.5 pr-5 font-medium">更新日</th>
+            </tr>
+          </thead>
+          <tbody>
+            {documents.map((doc) => {
+              const project = doc.projectId ? projectMap.get(doc.projectId) : undefined;
+              return (
+                <tr key={doc.id} className="border-b border-line/60 hover:bg-surface-muted/50 transition-colors">
+                  <td className="py-0 pl-5">
+                    <Link href={`/documents/${doc.id}`} className="flex items-center gap-2.5 py-3.5">
+                      <span
+                        className="inline-flex items-center justify-center size-8 rounded-lg shrink-0"
+                        style={{
+                          backgroundColor: `${project?.color ?? "#7C3AED"}1A`,
+                          color: project?.color ?? "#7C3AED",
+                        }}
+                      >
+                        <FileText className="size-4" />
+                      </span>
+                      <span className="font-medium text-ink">{doc.title}</span>
+                    </Link>
+                  </td>
+                  <td className="py-3.5 text-ink-soft">
+                    {project ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="size-2 rounded-full" style={{ backgroundColor: project.color }} />
+                        {project.name}
+                      </span>
+                    ) : (
+                      <span className="text-ink-muted">未分類</span>
+                    )}
+                  </td>
+                  <td className="py-3.5 pr-5 text-ink-soft tabular-nums">{formatDue(doc.updatedAt)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      ) : (
+        <EmptyState
+          icon={FileText}
+          title="ドキュメントがありません"
+          description="案件の議事録や設計メモを Markdown で残しましょう。"
+          action={
+            <button
+              type="button"
+              onClick={addDocument}
+              className="inline-flex items-center gap-1.5 h-9 rounded-lg bg-brand-600 hover:bg-brand-700 px-3.5 text-sm font-semibold text-white transition-colors"
+            >
+              <Plus className="size-4" />
+              最初のドキュメントを作成
+            </button>
+          }
+        />
+      )}
     </div>
   );
 }

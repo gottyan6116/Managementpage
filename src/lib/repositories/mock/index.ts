@@ -274,10 +274,80 @@ export async function listNotifications(): Promise<AppNotification[]> {
   return notifications;
 }
 
+/* ===== グローバル検索 ===== */
+export interface SearchHit {
+  id: string;
+  type: "project" | "task" | "document" | "file";
+  title: string;
+  subtitle: string;
+  href: string;
+}
+export async function searchAll(query: string): Promise<SearchHit[]> {
+  await delay();
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const hits: SearchHit[] = [];
+  for (const p of projects) {
+    if (`${p.name}${p.client ?? ""}`.toLowerCase().includes(q)) {
+      hits.push({ id: p.id, type: "project", title: p.name, subtitle: p.client ?? "案件", href: `/projects/${p.id}` });
+    }
+  }
+  for (const t of tasks) {
+    if (t.title.toLowerCase().includes(q)) {
+      const p = projectById(t.projectId);
+      hits.push({ id: t.id, type: "task", title: t.title, subtitle: p?.name ?? "タスク", href: "/todo" });
+    }
+  }
+  for (const d of documents) {
+    if (`${d.title}${d.body}`.toLowerCase().includes(q)) {
+      hits.push({ id: d.id, type: "document", title: d.title, subtitle: projectById(d.projectId)?.name ?? "ドキュメント", href: `/documents/${d.id}` });
+    }
+  }
+  for (const f of files) {
+    if (f.name.toLowerCase().includes(q)) {
+      hits.push({ id: f.id, type: "file", title: f.name, subtitle: projectById(f.projectId)?.name ?? "ファイル", href: "/files" });
+    }
+  }
+  return hits;
+}
+
 /* ===== Documents ===== */
 export async function listDocuments(): Promise<DocumentItem[]> {
   await delay();
   return [...documents].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+export async function getDocument(id: string): Promise<DocumentItem | null> {
+  await delay();
+  return documents.find((d) => d.id === id) ?? null;
+}
+
+export async function updateDocument(
+  id: string,
+  patch: { title?: string; body?: string; projectId?: string | null },
+): Promise<void> {
+  await delay();
+  const d = documents.find((x) => x.id === id);
+  if (!d) return;
+  if (patch.title !== undefined) d.title = patch.title;
+  if (patch.body !== undefined) d.body = patch.body;
+  if (patch.projectId !== undefined) d.projectId = patch.projectId;
+  d.updatedAt = new Date().toISOString().slice(0, 10);
+}
+
+export async function createDocument(
+  init?: { title?: string; body?: string; projectId?: string | null },
+): Promise<DocumentItem> {
+  await delay();
+  const doc: DocumentItem = {
+    id: `doc-${Date.now()}`,
+    projectId: init?.projectId ?? null,
+    title: init?.title ?? "無題のドキュメント",
+    body: init?.body ?? "",
+    updatedAt: new Date().toISOString().slice(0, 10),
+  };
+  documents.unshift(doc);
+  return doc;
 }
 
 /* ===== Files ===== */

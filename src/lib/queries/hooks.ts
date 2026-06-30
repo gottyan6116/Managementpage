@@ -25,6 +25,8 @@ export const qk = {
   actions: ["actions"] as const,
   notifications: ["notifications"] as const,
   documents: ["documents"] as const,
+  document: (id: string) => ["document", id] as const,
+  search: (q: string) => ["search", q] as const,
   files: ["files"] as const,
   notes: ["notes"] as const,
   noteSections: ["note-sections"] as const,
@@ -84,6 +86,39 @@ export function useNotifications() {
 
 export function useDocuments() {
   return useQuery({ queryKey: qk.documents, queryFn: repo.listDocuments });
+}
+
+export function useDocument(id: string) {
+  return useQuery({ queryKey: qk.document(id), queryFn: () => repo.getDocument(id) });
+}
+
+export function useUpdateDocument(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: { title?: string; body?: string; projectId?: string | null }) =>
+      repo.updateDocument(id, patch),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: qk.document(id) });
+      qc.invalidateQueries({ queryKey: qk.documents });
+    },
+  });
+}
+
+export function useCreateDocument() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (init?: { title?: string; body?: string; projectId?: string | null }) =>
+      repo.createDocument(init),
+    onSettled: () => qc.invalidateQueries({ queryKey: qk.documents }),
+  });
+}
+
+export function useSearch(query: string) {
+  return useQuery({
+    queryKey: qk.search(query),
+    queryFn: () => repo.searchAll(query),
+    enabled: query.trim().length > 0,
+  });
 }
 
 export function useFiles() {

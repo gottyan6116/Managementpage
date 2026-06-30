@@ -90,7 +90,7 @@ export function GanttChart({
   const weeks = useMemo(() => buildWeeks(range.start, range.end), [range]);
   const timelineWidth = range.totalDays * dayWidth;
   const showLeftCols = variant === "full";
-  const leftWidth = variant === "full" ? 340 : 190;
+  const leftWidth = variant === "full" ? 440 : 190;
 
   function syncScroll(from: "left" | "right") {
     if (syncing.current) return;
@@ -410,7 +410,7 @@ function LeftRow({
               setValue(row.label);
               setEditing(true);
             }}
-            title={editable ? "クリックで名称を編集" : undefined}
+            title={editable ? `${row.label}（クリックで編集）` : row.label}
             className={cn(
               "truncate text-sm text-left min-w-0",
               isProject ? "font-semibold text-ink" : "text-ink-soft",

@@ -117,7 +117,7 @@ export function NotesView() {
       </div>
 
       {/* ===== 列3: エディタ ===== */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex-1 min-w-[380px] flex flex-col">
         <div className="h-1" style={{ backgroundColor: activeSection?.color ?? "#7719AA" }} />
         {activeNote ? (
           <NoteEditor key={activeNote.id} note={activeNote} />
