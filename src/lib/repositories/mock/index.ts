@@ -273,7 +273,6 @@ export async function listGanttRows(projectId?: string): Promise<GanttRow[]> {
     const children = tasks
       .filter((t) => t.projectId === p.id)
       .sort((a, b) => a.sortOrder - b.sortOrder);
-    if (children.length === 0) continue;
     rows.push({
       id: p.id,
       type: "project",
@@ -427,6 +426,12 @@ export async function updateDocument(
   if (patch.body !== undefined) d.body = patch.body;
   if (patch.projectId !== undefined) d.projectId = patch.projectId;
   d.updatedAt = new Date().toISOString().slice(0, 10);
+}
+
+export async function deleteDocument(id: string): Promise<void> {
+  await delay();
+  const i = documents.findIndex((d) => d.id === id);
+  if (i >= 0) documents.splice(i, 1);
 }
 
 export async function createDocument(
@@ -604,6 +609,44 @@ export async function updateProjectName(id: string, name: string): Promise<void>
   await delay();
   const p = projects.find((x) => x.id === id);
   if (p) p.name = name;
+}
+
+/** ガント: 担当者の変更 (タスク/プロジェクト共通) */
+export async function updateTaskAssignee(id: string, memberId: string | null): Promise<void> {
+  await delay();
+  const t = tasks.find((x) => x.id === id);
+  if (t) t.assigneeIds = memberId ? [memberId] : [];
+}
+
+export async function updateProjectAssignee(id: string, memberId: string | null): Promise<void> {
+  await delay();
+  const p = projects.find((x) => x.id === id);
+  if (p) p.memberIds = memberId ? [memberId] : [];
+}
+
+const NEW_PROJECT_COLORS = ["#2563EB", "#14B8A6", "#8B5CF6", "#F59E0B", "#38BDF8", "#3B82F6"];
+
+/** 新規プロジェクトの作成 (ガント / 担当案件から) */
+export async function createProject(init: { name: string; clientId?: string | null }): Promise<Project> {
+  await delay();
+  const project: Project = {
+    id: `p-${Date.now()}`,
+    name: init.name.trim() || "無題のプロジェクト",
+    clientId: init.clientId ?? null,
+    client: null,
+    color: NEW_PROJECT_COLORS[projects.length % NEW_PROJECT_COLORS.length],
+    phase: null,
+    status: "in_progress",
+    priority: "medium",
+    progress: 0,
+    startDate: null,
+    endDate: null,
+    nextDue: null,
+    sortOrder: projects.length + 1,
+    memberIds: [self().id],
+  };
+  projects.push(project);
+  return project;
 }
 
 export async function deleteTask(id: string): Promise<void> {

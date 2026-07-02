@@ -7,6 +7,7 @@ import {
   ChevronDown,
   SlidersHorizontal,
   StickyNote,
+  Trash2,
   Users,
 } from "lucide-react";
 import { GanttChart } from "@/components/gantt/gantt-chart";
@@ -15,7 +16,7 @@ import { PhaseBadge, PriorityBadge, StatusBadge } from "@/components/shared/badg
 import { DueText } from "@/components/shared/due-text";
 import { ProgressBar } from "@/components/shared/progress-bar";
 import { SectionCard } from "@/components/shared/section-card";
-import { useMembers, useProjects } from "@/lib/queries/hooks";
+import { useDeleteGanttRow, useMembers, useProjects } from "@/lib/queries/hooks";
 import type { ProjectTab } from "@/lib/repositories";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +41,13 @@ export function ProjectsTable({
   const { data: projects } = useProjects(tab);
   const { data: members } = useMembers();
   const memberMap = useMemo(() => new Map(members?.map((m) => [m.id, m])), [members]);
+  const deleteProject = useDeleteGanttRow();
+
+  function handleDelete(event: React.MouseEvent, id: string, name: string) {
+    event.stopPropagation();
+    if (!window.confirm(`「${name}」とその配下のタスクを削除しますか？`)) return;
+    deleteProject.mutate({ id, type: "project" });
+  }
 
   function setTab(next: ProjectTab) {
     setTabState(next);
@@ -98,7 +106,7 @@ export function ProjectsTable({
               <th className="py-2.5 font-medium">次回期限</th>
               <th className="py-2.5 font-medium">優先度</th>
               <th className="py-2.5 font-medium">ステータス</th>
-              <th className="py-2.5 pr-6" />
+              <th className="py-2.5 pr-6 w-20" />
             </tr>
           </thead>
           <tbody>
@@ -142,13 +150,24 @@ export function ProjectsTable({
                     <td className="py-4 pr-4">
                       <StatusBadge status={p.status} />
                     </td>
-                    <td className="py-4 pr-6 text-right">
-                      <ChevronDown
-                        className={cn(
-                          "ml-auto size-4 text-ink-muted transition-transform",
-                          expanded && "rotate-180 text-brand-600",
-                        )}
-                      />
+                    <td className="py-4 pr-6">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => handleDelete(e, p.id, p.name)}
+                          aria-label={`${p.name}を削除`}
+                          title="削除"
+                          className="inline-flex items-center justify-center size-7 rounded-lg text-ink-muted hover:bg-red-50 hover:text-red-500 transition"
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                        <ChevronDown
+                          className={cn(
+                            "size-4 text-ink-muted transition-transform",
+                            expanded && "rotate-180 text-brand-600",
+                          )}
+                        />
+                      </div>
                     </td>
                   </tr>
                   {expanded && (

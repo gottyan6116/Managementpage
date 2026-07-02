@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { ChevronDown, Trash2 } from "lucide-react";
 import { Avatar } from "@/components/shared/avatar";
+import { AssigneeCombobox } from "@/components/shared/assignee-combobox";
 import { StatusBadge } from "@/components/shared/badges";
 import {
   useDeleteGanttRow,
@@ -12,6 +13,7 @@ import {
   useGanttRows,
   useMembers,
   useRenameGanttRow,
+  useUpdateGanttAssignee,
   useUpdateTaskSchedule,
 } from "@/lib/queries/hooks";
 import { APP_TODAY } from "@/lib/date";
@@ -27,7 +29,7 @@ import {
 } from "@/lib/gantt";
 import { useUiStore } from "@/stores/ui-store";
 import { cn } from "@/lib/utils";
-import type { GanttRow } from "@/types/domain";
+import type { GanttRow, Member } from "@/types/domain";
 
 type DragMode = "move" | "start" | "end";
 interface DragState {
@@ -72,6 +74,7 @@ export function GanttChart({
   const editSchedule = useUpdateTaskSchedule();
   const renameRow = useRenameGanttRow();
   const deleteRow = useDeleteGanttRow();
+  const updateAssignee = useUpdateGanttAssignee();
   const storeDayWidth = useUiStore((s) => s.ganttDayWidth);
   const dayWidth = variant === "preview" ? 22 : storeDayWidth;
 
@@ -210,6 +213,7 @@ export function GanttChart({
               row={row}
               showCols={showLeftCols}
               editable={editable}
+              members={members ?? []}
               member={memberMap.get(row.assigneeIds[0] ?? "")}
               collapsed={collapsedProjects.has(row.id)}
               onToggleCollapse={() => {
@@ -223,6 +227,9 @@ export function GanttChart({
               }}
               onRename={(title) => renameRow.mutate({ id: row.id, type: row.type, title })}
               onDelete={() => deleteRow.mutate({ id: row.id, type: row.type })}
+              onAssigneeChange={(memberId) =>
+                updateAssignee.mutate({ id: row.id, type: row.type, memberId })
+              }
             />
           ))}
         </div>
@@ -359,24 +366,29 @@ function LeftRow({
   row,
   showCols,
   editable,
+  members,
   member,
   collapsed,
   onToggleCollapse,
   onRename,
   onDelete,
+  onAssigneeChange,
 }: {
   row: GanttRow;
   showCols: boolean;
   editable: boolean;
+  members: Member[];
   member?: { id: string; name: string; color: string; avatarUrl: string | null };
   collapsed: boolean;
   onToggleCollapse: () => void;
   onRename: (title: string) => void;
   onDelete: () => void;
+  onAssigneeChange: (memberId: string | null) => void;
 }) {
   const isProject = row.type === "project";
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(row.label);
+  const [editingAssignee, setEditingAssignee] = useState(false);
 
   function commit() {
     const v = value.trim();
@@ -468,8 +480,35 @@ function LeftRow({
       </div>
       {showCols && !editing && (
         <>
-          <span className="w-14 flex justify-center">
-            {member && <Avatar member={member} size="sm" />}
+          <span className="w-14 flex justify-center relative">
+            {editable && editingAssignee ? (
+              <div className="absolute z-20 -left-5 top-1/2 -translate-y-1/2 w-24">
+                <AssigneeCombobox
+                  members={members}
+                  value={member?.id ?? null}
+                  onChange={onAssigneeChange}
+                  onClose={() => setEditingAssignee(false)}
+                  placeholder="担当者"
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => editable && setEditingAssignee(true)}
+                title={editable ? "クリックで担当者を編集" : member?.name}
+                className={cn(
+                  "inline-flex items-center justify-center size-6 rounded-full",
+                  editable && "hover:ring-2 hover:ring-brand-200",
+                )}
+              >
+                {member ? (
+                  <Avatar member={member} size="sm" />
+                ) : editable ? (
+                  <span className="text-[10px] text-ink-muted">未設定</span>
+                ) : null}
+              </button>
+            )}
           </span>
           <span className="w-12 text-center text-xs font-semibold text-ink-soft tabular-nums">
             {row.progress}%

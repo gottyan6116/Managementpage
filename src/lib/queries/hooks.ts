@@ -9,6 +9,7 @@ import * as repo from "@/lib/repositories";
 import type {
   ActionItem,
   BillingRecord,
+  DocumentItem,
   FileItem,
   GanttRow,
   Note,
@@ -137,6 +138,25 @@ export function useUpdateDocument(id: string) {
   });
 }
 
+export function useDeleteDocument() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => repo.deleteDocument(id),
+    onMutate: async (id: string) => {
+      await qc.cancelQueries({ queryKey: qk.documents });
+      const prev = qc.getQueryData<DocumentItem[] | undefined>(qk.documents);
+      qc.setQueryData<DocumentItem[]>(qk.documents, (old) =>
+        old?.filter((doc) => doc.id !== id) ?? [],
+      );
+      return { prev };
+    },
+    onError: (_error, _id, ctx) => {
+      if (ctx?.prev) qc.setQueryData(qk.documents, ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: qk.documents }),
+  });
+}
+
 export function useCreateDocument() {
   const qc = useQueryClient();
   return useMutation({
@@ -255,6 +275,47 @@ export function useDeleteGanttRow() {
       qc.invalidateQueries({ queryKey: ["gantt"] });
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+}
+
+/** ガント行の担当者変更 (タスク/プロジェクト) */
+export function useUpdateGanttAssignee() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      type,
+      memberId,
+    }: {
+      id: string;
+      type: "task" | "project";
+      memberId: string | null;
+    }) =>
+      type === "task" ? repo.updateTaskAssignee(id, memberId) : repo.updateProjectAssignee(id, memberId),
+    onMutate: async ({ id, memberId }) => {
+      await qc.cancelQueries({ queryKey: ["gantt"] });
+      qc.setQueriesData<GanttRow[]>({ queryKey: ["gantt"] }, (old) =>
+        old?.map((r) => (r.id === id ? { ...r, assigneeIds: memberId ? [memberId] : [] } : r)),
+      );
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["gantt"] });
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+}
+
+/** 新規プロジェクトの作成 */
+export function useCreateProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (init: { name: string; clientId?: string | null }) => repo.createProject(init),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["gantt"] });
+      qc.invalidateQueries({ queryKey: qk.kpi });
     },
   });
 }

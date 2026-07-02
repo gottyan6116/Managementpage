@@ -29,6 +29,7 @@ import {
   X,
 } from "lucide-react";
 import { Avatar } from "@/components/shared/avatar";
+import { AssigneeCombobox } from "@/components/shared/assignee-combobox";
 import {
   useBoardColumns,
   useCreateTask,
@@ -612,11 +613,22 @@ function Card({
         onToggle?.();
       }}
       className={cn(
-        "rounded-xl bg-surface border border-line p-3 shadow-sm transition-shadow cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-200",
+        "group relative rounded-xl bg-surface border border-line p-3 shadow-sm transition-shadow cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-200",
         expanded && "shadow-card ring-1 ring-brand-100",
         dragging && "shadow-pop rotate-2",
       )}
     >
+      {!expanded && onDelete && (
+        <button
+          type="button"
+          onClick={onDelete}
+          aria-label={`${task.title}を削除`}
+          title="削除"
+          className="absolute right-2 top-2 inline-flex items-center justify-center size-6 rounded-md bg-surface text-ink-muted opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition"
+        >
+          <Trash2 className="size-3.5" />
+        </button>
+      )}
       <div className="flex items-start gap-2">
         {dragHandle}
         <span
@@ -730,18 +742,14 @@ function Card({
             </div>
             <label className="text-[11px] font-semibold text-ink-soft">
               担当者
-              <select
-                value={draft.assigneeId}
-                onChange={(e) => setDraft((d) => ({ ...d, assigneeId: e.target.value }))}
-                className="mt-1 h-9 w-full rounded-lg border border-line bg-surface px-2 text-xs text-ink outline-none focus:border-brand-300"
-              >
-                <option value="">未設定</option>
-                {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
+              <AssigneeCombobox
+                members={members}
+                value={draft.assigneeId || null}
+                onChange={(id) => setDraft((d) => ({ ...d, assigneeId: id ?? "" }))}
+                className="mt-1"
+                inputClassName="h-9"
+                placeholder="担当者名を入力"
+              />
             </label>
             <label className="text-[11px] font-semibold text-ink-soft">
               自由記入

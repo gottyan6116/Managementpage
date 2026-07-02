@@ -3,9 +3,9 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileText, ListPlus, Plus } from "lucide-react";
+import { FileText, ListPlus, Plus, Trash2 } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
-import { useCreateDocument, useDocuments, useProjects } from "@/lib/queries/hooks";
+import { useCreateDocument, useDeleteDocument, useDocuments, useProjects } from "@/lib/queries/hooks";
 import { formatDue } from "@/lib/date";
 
 export function DocumentsView() {
@@ -13,8 +13,16 @@ export function DocumentsView() {
   const { data: documents, isLoading } = useDocuments();
   const { data: projects } = useProjects("all");
   const createDoc = useCreateDocument();
+  const deleteDoc = useDeleteDocument();
 
   const projectMap = useMemo(() => new Map(projects?.map((p) => [p.id, p])), [projects]);
+
+  function handleDelete(event: React.MouseEvent, id: string, title: string) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!window.confirm(`「${title}」を削除しますか？`)) return;
+    deleteDoc.mutate(id);
+  }
 
   function addDocument() {
     createDoc.mutate(undefined, {
@@ -64,7 +72,8 @@ export function DocumentsView() {
             <tr className="text-left text-xs text-ink-muted border-b border-line">
               <th className="py-2.5 pl-5 font-medium">タイトル</th>
               <th className="py-2.5 font-medium">プロジェクト</th>
-              <th className="py-2.5 pr-5 font-medium">更新日</th>
+              <th className="py-2.5 font-medium">更新日</th>
+              <th className="py-2.5 pr-5 w-12" />
             </tr>
           </thead>
           <tbody>
@@ -96,7 +105,18 @@ export function DocumentsView() {
                       <span className="text-ink-muted">未分類</span>
                     )}
                   </td>
-                  <td className="py-3.5 pr-5 text-ink-soft tabular-nums">{formatDue(doc.updatedAt)}</td>
+                  <td className="py-3.5 text-ink-soft tabular-nums">{formatDue(doc.updatedAt)}</td>
+                  <td className="py-3.5 pr-5">
+                    <button
+                      type="button"
+                      onClick={(e) => handleDelete(e, doc.id, doc.title)}
+                      aria-label={`${doc.title}を削除`}
+                      title="削除"
+                      className="inline-flex items-center justify-center size-8 rounded-lg text-ink-muted hover:bg-red-50 hover:text-red-500 transition"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </td>
                 </tr>
               );
             })}

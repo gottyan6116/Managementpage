@@ -2,9 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Eye, ListPlus, Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Check, Eye, ListPlus, Pencil, Trash2 } from "lucide-react";
 import { Markdown } from "@/components/shared/markdown";
-import { useCreateTask, useDocument, useProjects, useUpdateDocument } from "@/lib/queries/hooks";
+import {
+  useCreateTask,
+  useDeleteDocument,
+  useDocument,
+  useProjects,
+  useUpdateDocument,
+} from "@/lib/queries/hooks";
 import { formatDue } from "@/lib/date";
 import type { DocumentItem } from "@/types/domain";
 
@@ -28,7 +35,9 @@ export function DocumentDetail({ id }: { id: string }) {
 }
 
 function Editor({ doc }: { doc: DocumentItem }) {
+  const router = useRouter();
   const update = useUpdateDocument(doc.id);
+  const deleteDoc = useDeleteDocument();
   const createTask = useCreateTask({ tab: "all", projectId: doc.projectId ?? undefined });
   const { data: projects } = useProjects("all");
   const [title, setTitle] = useState(doc.title);
@@ -39,6 +48,11 @@ function Editor({ doc }: { doc: DocumentItem }) {
 
   function save() {
     update.mutate({ title, body, projectId });
+  }
+
+  function remove() {
+    if (!window.confirm(`「${doc.title}」を削除しますか？`)) return;
+    deleteDoc.mutate(doc.id, { onSuccess: () => router.push("/documents") });
   }
 
   const todoCandidates = body
@@ -97,6 +111,15 @@ function Editor({ doc }: { doc: DocumentItem }) {
         >
           <ListPlus className="size-4" />
           ToDoをタスク化
+        </button>
+        <button
+          type="button"
+          onClick={remove}
+          aria-label="ドキュメントを削除"
+          title="削除"
+          className="inline-flex items-center justify-center size-9 rounded-lg border border-line bg-surface text-ink-soft hover:bg-red-50 hover:text-red-500 transition-colors shrink-0"
+        >
+          <Trash2 className="size-4" />
         </button>
       </div>
 
