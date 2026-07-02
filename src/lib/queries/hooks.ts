@@ -6,7 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import * as repo from "@/lib/repositories";
-import type { ActionItem, GanttRow, Note, Task } from "@/types/domain";
+import type { ActionItem, GanttRow, Note, Priority, Task } from "@/types/domain";
 
 /** クエリキー (docs/05 §2)。データ取得は必ずこのフック経由。 */
 export const qk = {
@@ -249,6 +249,61 @@ export function useToggleTaskDone(params: repo.TaskListParams = {}) {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: qk.kpi });
+    },
+  });
+}
+
+export function useCreateTask(params: repo.TaskListParams = {}) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (init: {
+      projectId: string | null;
+      title: string;
+      dueDate?: string | null;
+      columnId?: string;
+      priority?: Priority;
+      assigneeId?: string | null;
+    }) => repo.createTask(init),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: qk.tasks(params) });
+      qc.invalidateQueries({ queryKey: qk.board });
+      qc.invalidateQueries({ queryKey: qk.kpi });
+      qc.invalidateQueries({ queryKey: ["gantt"] });
+    },
+  });
+}
+
+export function useUpdateTaskDetails(params: repo.TaskListParams = {}) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: repo.TaskDetailsPatch;
+    }) => repo.updateTaskDetails(id, patch),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: qk.tasks(params) });
+      qc.invalidateQueries({ queryKey: qk.board });
+      qc.invalidateQueries({ queryKey: qk.kpi });
+      qc.invalidateQueries({ queryKey: ["gantt"] });
+    },
+  });
+}
+
+export function useDeleteTask(params: repo.TaskListParams = {}) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => repo.deleteTask(id),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: qk.tasks(params) });
+      qc.invalidateQueries({ queryKey: qk.board });
+      qc.invalidateQueries({ queryKey: qk.kpi });
+      qc.invalidateQueries({ queryKey: ["gantt"] });
     },
   });
 }

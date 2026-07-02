@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowDown, ArrowUp, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -10,25 +11,38 @@ export function KpiCard({
   sub,
   trend,
   graph,
+  href,
 }: {
-  icon: LucideIcon;
-  iconColor: string;
-  iconBg: string;
+  icon?: LucideIcon;
+  iconColor?: string;
+  iconBg?: string;
   label: string;
   value: React.ReactNode;
   sub?: React.ReactNode;
   trend?: { value: string; dir: "up" | "down"; tone?: "good" | "bad" };
   graph?: React.ReactNode;
+  href?: string;
 }) {
-  return (
-    <div className="rounded-2xl bg-surface border border-line shadow-card p-5 flex flex-col gap-3 transition-shadow hover:shadow-pop">
+  const body = (
+    <div
+      className={cn(
+        "rounded-xl bg-surface border border-line shadow-card px-5 py-4 flex flex-col gap-2.5 transition-shadow hover:shadow-pop",
+        href && "cursor-pointer",
+      )}
+    >
       <div className="flex items-start justify-between">
-        <span
-          className="inline-flex items-center justify-center rounded-xl size-12 shrink-0"
-          style={{ backgroundColor: iconBg, color: iconColor }}
-        >
-          <Icon className="size-6" />
-        </span>
+        {Icon ? (
+          <span
+            className="inline-flex items-center justify-center rounded-lg size-10 shrink-0"
+            style={{ backgroundColor: iconBg, color: iconColor }}
+          >
+            <Icon className="size-5" />
+          </span>
+        ) : (
+          <span className="text-xs font-semibold tracking-wide text-ink-muted">
+            {label}
+          </span>
+        )}
         {trend && (
           <span
             className={cn(
@@ -50,8 +64,8 @@ export function KpiCard({
 
       <div className="flex items-end justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-sm text-ink-soft">{label}</p>
-          <p className="text-[32px] leading-none font-bold text-ink mt-1 tabular-nums">
+          {Icon && <p className="text-sm text-ink-soft">{label}</p>}
+          <p className="text-[28px] leading-none font-bold text-ink mt-1 tabular-nums">
             {value}
           </p>
           {sub && <p className="text-xs text-ink-muted mt-1.5">{sub}</p>}
@@ -60,4 +74,14 @@ export function KpiCard({
       </div>
     </div>
   );
+
+  if (href) {
+    return (
+      <Link href={href} aria-label={`${label} の詳細を見る`}>
+        {body}
+      </Link>
+    );
+  }
+
+  return body;
 }

@@ -4,6 +4,11 @@
  * デモ操作 (完了トグル等) はモジュール内配列をその場で更新し、セッション中は永続する。
  */
 import { daysUntil } from "@/lib/date";
+import {
+  columnIdToTaskStatus,
+  normalizeBoardTaskPatch,
+  type BoardTaskPatchInput,
+} from "@/lib/board-task-fields";
 import type {
   ActionItem,
   AppNotification,
@@ -96,6 +101,37 @@ export async function toggleTaskDone(id: string): Promise<void> {
   }
 }
 
+export async function createTask(init: {
+  projectId: string | null;
+  title: string;
+  dueDate?: string | null;
+  columnId?: string;
+  priority?: Task["priority"];
+  assigneeId?: string | null;
+}): Promise<Task> {
+  await delay();
+  const columnId = init.columnId ?? "col-todo";
+  const status = columnIdToTaskStatus(columnId);
+  const task: Task = {
+    id: `t-${Date.now()}`,
+    projectId: init.projectId,
+    parentTaskId: null,
+    boardColumnId: columnId,
+    title: init.title.trim() || "無題のTodo",
+    status,
+    priority: init.priority ?? "medium",
+    progress: status === "done" ? 100 : 0,
+    startDate: new Date().toISOString().slice(0, 10),
+    dueDate: init.dueDate ?? null,
+    isMilestone: false,
+    sortOrder: tasks.length + 1,
+    boardPosition: tasks.filter((t) => t.boardColumnId === columnId).length,
+    assigneeIds: [init.assigneeId || self().id],
+  };
+  tasks.push(task);
+  return task;
+}
+
 /** ガント: バーのドラッグで開始日/終了日を更新 */
 export async function updateTaskSchedule(
   id: string,
@@ -120,9 +156,27 @@ export async function moveTask(
   if (!t) return;
   t.boardColumnId = columnId;
   t.boardPosition = position;
-  t.status =
-    columnId === "col-done" ? "done" : columnId === "col-doing" ? "in_progress" : "todo";
+  t.status = columnIdToTaskStatus(columnId);
   if (columnId === "col-done") t.progress = 100;
+}
+
+export type TaskDetailsPatch = BoardTaskPatchInput;
+
+export async function updateTaskDetails(
+  id: string,
+  patch: TaskDetailsPatch,
+): Promise<void> {
+  await delay();
+  const t = tasks.find((x) => x.id === id);
+  if (!t) return;
+  const next = normalizeBoardTaskPatch({ ...patch, currentTitle: t.title });
+  if (next.title !== undefined) t.title = next.title;
+  if (next.priority !== undefined) t.priority = next.priority;
+  if (next.progress !== undefined) t.progress = next.progress;
+  if (next.startDate !== undefined) t.startDate = next.startDate;
+  if (next.dueDate !== undefined) t.dueDate = next.dueDate;
+  if (next.projectId !== undefined) t.projectId = next.projectId;
+  if (next.assigneeIds !== undefined) t.assigneeIds = next.assigneeIds;
 }
 
 /* ===== Board ===== */

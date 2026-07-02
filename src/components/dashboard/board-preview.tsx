@@ -24,7 +24,7 @@ export function BoardPreview({ perColumn = 2 }: { perColumn?: number }) {
   const byStatus = (s: Task["status"]) => tasks?.filter((t) => t.status === s) ?? [];
 
   return (
-    <SectionCard title="ボード" actionHref="/board" actionLabel="ボードへ">
+    <SectionCard title="Todo" actionHref="/board" actionLabel="Todoへ">
       <div className="grid grid-cols-3 gap-3">
         {COLUMNS.map((col) => {
           const list = byStatus(col.status);

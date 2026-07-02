@@ -5,8 +5,8 @@ export default function BoardPage() {
   return (
     <>
       <PageHeader
-        title="ボード"
-        subtitle="タスクをドラッグ&ドロップでステータス管理"
+        title="Todo"
+        subtitle="Todoをドラッグ&ドロップでステータス管理"
       />
       <BoardKanban />
     </>
