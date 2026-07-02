@@ -15,6 +15,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useDeleteFile, useFiles, useProjects } from "@/lib/queries/hooks";
+import { useToastStore } from "@/stores/toast-store";
+import { scheduleUndoableDelete } from "@/lib/undo-delete";
 import { formatDue } from "@/lib/date";
 import { cn } from "@/lib/utils";
 
@@ -38,8 +40,21 @@ export function FilesView() {
   const { data: projects } = useProjects("all");
   const deleteFile = useDeleteFile();
   const [view, setView] = useState<"grid" | "list">("grid");
+  const pendingDeleteIds = useToastStore((s) => s.pendingDeleteIds);
 
   const projectMap = useMemo(() => new Map(projects?.map((p) => [p.id, p])), [projects]);
+  const visibleFiles = useMemo(
+    () => files?.filter((f) => !pendingDeleteIds.has(f.id)),
+    [files, pendingDeleteIds],
+  );
+
+  function handleDelete(id: string, name: string) {
+    scheduleUndoableDelete({
+      ids: [id],
+      message: `「${name}」を削除しました`,
+      onCommit: () => deleteFile.mutate(id),
+    });
+  }
 
   return (
     <div className="space-y-5">
@@ -82,7 +97,7 @@ export function FilesView() {
 
       {view === "grid" ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-          {files?.map((f) => {
+          {visibleFiles?.map((f) => {
             const { Icon, color } = iconFor(f.mimeType);
             const project = f.projectId ? projectMap.get(f.projectId) : undefined;
             return (
@@ -101,7 +116,7 @@ export function FilesView() {
                     type="button"
                     aria-label={`${f.name}を削除`}
                     title="削除"
-                    onClick={() => deleteFile.mutate(f.id)}
+                    onClick={() => handleDelete(f.id, f.name)}
                     className="inline-flex items-center justify-center size-7 rounded-lg text-ink-muted opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition"
                   >
                     <Trash2 className="size-4" />
@@ -132,7 +147,7 @@ export function FilesView() {
               </tr>
             </thead>
             <tbody>
-              {files?.map((f) => {
+              {visibleFiles?.map((f) => {
                 const { Icon, color } = iconFor(f.mimeType);
                 const project = f.projectId ? projectMap.get(f.projectId) : undefined;
                 return (
@@ -164,7 +179,7 @@ export function FilesView() {
                           type="button"
                           aria-label={`${f.name}を削除`}
                           title="削除"
-                          onClick={() => deleteFile.mutate(f.id)}
+                          onClick={() => handleDelete(f.id, f.name)}
                           className="inline-flex items-center justify-center size-7 rounded-lg text-ink-muted hover:bg-red-50 hover:text-red-500 transition-colors"
                         >
                           <Trash2 className="size-4" />

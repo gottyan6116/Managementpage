@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Check, ChevronDown, SlidersHorizontal, Settings2 } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, SlidersHorizontal, Settings2 } from "lucide-react";
 import { SectionCard } from "@/components/shared/section-card";
 import { Avatar } from "@/components/shared/avatar";
 import { PriorityBadge, StatusBadge } from "@/components/shared/badges";
@@ -13,14 +13,24 @@ import {
   useTasks,
   useToggleTaskDone,
 } from "@/lib/queries/hooks";
+import { self } from "@/lib/repositories";
+import { daysUntil } from "@/lib/date";
 import type { TaskTab } from "@/lib/repositories";
+import type { Priority } from "@/types/domain";
 import { cn } from "@/lib/utils";
 
-const TABS: { key: TaskTab; label: string; count: number }[] = [
-  { key: "all", label: "すべて", count: 120 },
-  { key: "mine", label: "自分のタスク", count: 42 },
-  { key: "overdue", label: "期限超過", count: 2 },
-  { key: "done", label: "完了", count: 86 },
+const TABS: { key: TaskTab; label: string }[] = [
+  { key: "all", label: "すべて" },
+  { key: "mine", label: "自分のタスク" },
+  { key: "overdue", label: "期限超過" },
+  { key: "done", label: "完了" },
+];
+
+const PRIORITY_OPTIONS: { key: Priority | "all"; label: string }[] = [
+  { key: "all", label: "すべての優先度" },
+  { key: "high", label: "高のみ" },
+  { key: "medium", label: "中のみ" },
+  { key: "low", label: "低のみ" },
 ];
 
 export function TaskTable({
@@ -35,8 +45,12 @@ export function TaskTable({
   const router = useRouter();
   const pathname = usePathname();
   const [tab, setTabState] = useState<TaskTab>(initialTab);
+  const [priorityFilter, setPriorityFilter] = useState<Priority | "all">("all");
+  const [compact, setCompact] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const { data: tasks } = useTasks({ tab, projectId });
+  const { data: allTasksForCount } = useTasks({ tab: "all", projectId });
   const { data: members } = useMembers();
   const { data: projects } = useProjects("all");
   const toggle = useToggleTaskDone({ tab, projectId });
@@ -50,7 +64,28 @@ export function TaskTable({
     [projects],
   );
 
-  const rows = limit ? tasks?.slice(0, limit) : tasks;
+  const counts = useMemo(() => {
+    const list = allTasksForCount ?? [];
+    const me = self();
+    return {
+      all: list.length,
+      mine: list.filter((t) => t.assigneeIds.includes(me.id)).length,
+      overdue: list.filter((t) => t.dueDate && daysUntil(t.dueDate) < 0 && t.status !== "done")
+        .length,
+      done: list.filter((t) => t.status === "done").length,
+    };
+  }, [allTasksForCount]);
+
+  const filtered = useMemo(
+    () => (priorityFilter === "all" ? tasks : tasks?.filter((t) => t.priority === priorityFilter)),
+    [tasks, priorityFilter],
+  );
+  const rows = limit && !showAll ? filtered?.slice(0, limit) : filtered;
+
+  function cyclePriorityFilter() {
+    const idx = PRIORITY_OPTIONS.findIndex((o) => o.key === priorityFilter);
+    setPriorityFilter(PRIORITY_OPTIONS[(idx + 1) % PRIORITY_OPTIONS.length].key);
+  }
 
   function setTab(next: TaskTab) {
     setTabState(next);
@@ -62,6 +97,8 @@ export function TaskTable({
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
+
+  const rowPadding = compact ? "py-2" : "py-3.5";
 
   return (
     <SectionCard bodyClassName="px-0 pb-0">
@@ -83,7 +120,7 @@ export function TaskTable({
                 )}
               >
                 {t.label}
-                <span className="text-xs text-ink-muted">{t.count}</span>
+                <span className="text-xs text-ink-muted">{counts[t.key]}</span>
                 {active && (
                   <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-brand-600" />
                 )}
@@ -94,17 +131,29 @@ export function TaskTable({
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
-            className="inline-flex items-center gap-1.5 h-8 rounded-lg border border-line px-2.5 text-xs font-medium text-ink-soft hover:bg-surface-muted transition-colors"
+            onClick={cyclePriorityFilter}
+            className={cn(
+              "inline-flex items-center gap-1.5 h-8 rounded-lg border px-2.5 text-xs font-medium transition-colors",
+              priorityFilter === "all"
+                ? "border-line text-ink-soft hover:bg-surface-muted"
+                : "border-brand-300 bg-brand-50 text-brand-700",
+            )}
           >
             <SlidersHorizontal className="size-3.5" />
-            フィルター
+            {PRIORITY_OPTIONS.find((o) => o.key === priorityFilter)?.label}
           </button>
           <button
             type="button"
-            className="inline-flex items-center gap-1.5 h-8 rounded-lg border border-line px-2.5 text-xs font-medium text-ink-soft hover:bg-surface-muted transition-colors"
+            onClick={() => setCompact((v) => !v)}
+            className={cn(
+              "inline-flex items-center gap-1.5 h-8 rounded-lg border px-2.5 text-xs font-medium transition-colors",
+              compact
+                ? "border-brand-300 bg-brand-50 text-brand-700"
+                : "border-line text-ink-soft hover:bg-surface-muted",
+            )}
           >
             <Settings2 className="size-3.5" />
-            表示設定
+            {compact ? "コンパクト表示" : "標準表示"}
           </button>
         </div>
       </div>
@@ -135,7 +184,7 @@ export function TaskTable({
                   key={task.id}
                   className="border-t border-line hover:bg-surface-muted/60 transition-colors"
                 >
-                  <td className="pl-6 py-3.5">
+                  <td className={cn("pl-6", rowPadding)}>
                     <button
                       type="button"
                       onClick={() => toggle.mutate(task.id)}
@@ -150,7 +199,7 @@ export function TaskTable({
                       {done && <Check className="size-3" strokeWidth={3} />}
                     </button>
                   </td>
-                  <td className="py-3.5 pr-4">
+                  <td className={cn("pr-4", rowPadding)}>
                     <span
                       className={cn(
                         "font-medium text-ink",
@@ -160,7 +209,7 @@ export function TaskTable({
                       {task.title}
                     </span>
                   </td>
-                  <td className="py-3.5 pr-4">
+                  <td className={cn("pr-4", rowPadding)}>
                     {project && (
                       <span className="inline-flex items-center gap-1.5 text-ink-soft">
                         <span
@@ -171,7 +220,7 @@ export function TaskTable({
                       </span>
                     )}
                   </td>
-                  <td className="py-3.5 pr-4">
+                  <td className={cn("pr-4", rowPadding)}>
                     {assignee && (
                       <span className="inline-flex items-center gap-2">
                         <Avatar member={assignee} size="sm" />
@@ -181,13 +230,13 @@ export function TaskTable({
                       </span>
                     )}
                   </td>
-                  <td className="py-3.5 pr-4">
+                  <td className={cn("pr-4", rowPadding)}>
                     {task.dueDate && <DueText date={task.dueDate} done={done} />}
                   </td>
-                  <td className="py-3.5 pr-4">
+                  <td className={cn("pr-4", rowPadding)}>
                     <PriorityBadge priority={task.priority} />
                   </td>
-                  <td className="py-3.5 pr-6">
+                  <td className={cn("pr-6", rowPadding)}>
                     <StatusBadge status={task.status} />
                   </td>
                 </tr>
@@ -202,13 +251,16 @@ export function TaskTable({
         )}
       </div>
 
-      <button
-        type="button"
-        className="w-full flex items-center justify-center gap-1 py-3 border-t border-line text-sm font-medium text-ink-soft hover:bg-surface-muted transition-colors"
-      >
-        すべてのタスクを表示
-        <ChevronDown className="size-4" />
-      </button>
+      {limit && (filtered?.length ?? 0) > limit && (
+        <button
+          type="button"
+          onClick={() => setShowAll((v) => !v)}
+          className="w-full flex items-center justify-center gap-1 py-3 border-t border-line text-sm font-medium text-ink-soft hover:bg-surface-muted transition-colors"
+        >
+          {showAll ? "表示を減らす" : "すべてのタスクを表示"}
+          {showAll ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+        </button>
+      )}
     </SectionCard>
   );
 }

@@ -1,10 +1,8 @@
 import {
   BarChart3,
   Briefcase,
-  Building2,
   CircleDollarSign,
   FileText,
-  Folder,
   LayoutGrid,
   ListTodo,
   Timer,
@@ -38,7 +36,6 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "案件",
     items: [
       { label: "担当案件", href: "/projects", icon: Briefcase },
-      { label: "クライアント", href: "/clients", icon: Building2 },
       { label: "請求・売上", href: "/billing", icon: CircleDollarSign },
     ],
   },
@@ -46,7 +43,6 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "ナレッジ",
     items: [
       { label: "ドキュメント", href: "/documents", icon: FileText },
-      { label: "ファイル", href: "/files", icon: Folder },
       { label: "メモ", href: "/notes", icon: StickyNote },
     ],
   },

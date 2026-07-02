@@ -1,55 +1,72 @@
 "use client";
 
-import {
-  Calendar,
-  ChevronDown,
-  FolderKanban,
-  LayoutPanelTop,
-  RotateCcw,
-  SlidersHorizontal,
-  User,
-  type LucideIcon,
-} from "lucide-react";
+import { RotateCcw, SlidersHorizontal, User } from "lucide-react";
+import type { Member, TaskStatus } from "@/types/domain";
+import { TASK_STATUS_LABEL } from "@/lib/labels";
 
-function FilterPill({
-  icon: Icon,
-  label,
-  value,
-  chevron = true,
+const STATUS_OPTIONS: TaskStatus[] = ["todo", "in_progress", "done", "on_hold", "canceled"];
+
+export function GanttFilterBar({
+  members,
+  assigneeId,
+  onAssigneeChange,
+  status,
+  onStatusChange,
+  onReset,
 }: {
-  icon: LucideIcon;
-  label: string;
-  value?: string;
-  chevron?: boolean;
+  members: Member[];
+  assigneeId: string;
+  onAssigneeChange: (id: string) => void;
+  status: string;
+  onStatusChange: (status: string) => void;
+  onReset: () => void;
 }) {
-  return (
-    <button
-      type="button"
-      className="inline-flex items-center gap-1.5 h-9 rounded-lg border border-line bg-surface px-3 text-xs text-ink-soft hover:bg-surface-muted transition-colors"
-    >
-      <Icon className="size-3.5 text-ink-muted" />
-      <span className="text-ink-muted">{label}</span>
-      {value && <span className="font-medium text-ink">{value}</span>}
-      {chevron && <ChevronDown className="size-3.5 text-ink-muted" />}
-    </button>
-  );
-}
+  const hasFilter = assigneeId !== "" || status !== "";
 
-export function GanttFilterBar() {
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-surface border border-line shadow-card px-4 py-3">
-      <FilterPill icon={FolderKanban} label="プロジェクト" value="すべて" />
-      <FilterPill icon={User} label="担当者" value="すべて" />
-      <FilterPill icon={SlidersHorizontal} label="ステータス" value="すべて" />
-      <FilterPill icon={Calendar} label="期間" value="2026/06/01 - 2026/08/31" />
-      <FilterPill icon={LayoutPanelTop} label="ビュー" chevron={false} />
-      <button
-        type="button"
-        className="inline-flex items-center gap-1 h-9 rounded-lg px-2.5 text-xs font-medium text-ink-soft hover:bg-surface-muted transition-colors"
-      >
-        <RotateCcw className="size-3.5" />
-        リセット
-      </button>
+      <label className="inline-flex items-center gap-1.5 h-9 rounded-lg border border-line bg-surface px-3 text-xs text-ink-soft">
+        <User className="size-3.5 text-ink-muted" />
+        <span className="text-ink-muted">担当者</span>
+        <select
+          value={assigneeId}
+          onChange={(e) => onAssigneeChange(e.target.value)}
+          className="bg-transparent font-medium text-ink outline-none"
+        >
+          <option value="">すべて</option>
+          {members.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="inline-flex items-center gap-1.5 h-9 rounded-lg border border-line bg-surface px-3 text-xs text-ink-soft">
+        <SlidersHorizontal className="size-3.5 text-ink-muted" />
+        <span className="text-ink-muted">ステータス</span>
+        <select
+          value={status}
+          onChange={(e) => onStatusChange(e.target.value)}
+          className="bg-transparent font-medium text-ink outline-none"
+        >
+          <option value="">すべて</option>
+          {STATUS_OPTIONS.map((s) => (
+            <option key={s} value={s}>
+              {TASK_STATUS_LABEL[s]}
+            </option>
+          ))}
+        </select>
+      </label>
+      {hasFilter && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="inline-flex items-center gap-1 h-9 rounded-lg px-2.5 text-xs font-medium text-ink-soft hover:bg-surface-muted transition-colors"
+        >
+          <RotateCcw className="size-3.5" />
+          リセット
+        </button>
+      )}
     </div>
   );
 }

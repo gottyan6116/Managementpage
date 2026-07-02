@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { GanttChart } from "./gantt-chart";
 import { GanttFilterBar } from "./gantt-filter-bar";
-import { useCreateProject, useCreateTask, useGanttRows } from "@/lib/queries/hooks";
+import { useCreateProject, useCreateTask, useGanttRows, useMembers } from "@/lib/queries/hooks";
 import { GANTT_DAY_WIDTH_DEFAULT, useUiStore } from "@/stores/ui-store";
 import { cn } from "@/lib/utils";
 
@@ -28,11 +28,14 @@ export function GanttBoard() {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskProjectId, setNewTaskProjectId] = useState<string>("");
   const [newTaskDue, setNewTaskDue] = useState("");
+  const [assigneeFilter, setAssigneeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const dayWidth = useUiStore((s) => s.ganttDayWidth);
   const setDayWidth = useUiStore((s) => s.setGanttDayWidth);
 
   const createProject = useCreateProject();
   const createTask = useCreateTask();
+  const { data: members } = useMembers();
 
   // タブ用にプロジェクト一覧 (ガントに表示される案件) を取得
   const { data: allRows } = useGanttRows();
@@ -71,7 +74,17 @@ export function GanttBoard() {
 
   return (
     <div className="space-y-4">
-      <GanttFilterBar />
+      <GanttFilterBar
+        members={members ?? []}
+        assigneeId={assigneeFilter}
+        onAssigneeChange={setAssigneeFilter}
+        status={statusFilter}
+        onStatusChange={setStatusFilter}
+        onReset={() => {
+          setAssigneeFilter("");
+          setStatusFilter("");
+        }}
+      />
 
       {/* プロジェクトタブ + ツールバー */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
@@ -263,6 +276,8 @@ export function GanttBoard() {
         key={selectedProject ?? "all"}
         variant="full"
         projectId={selectedProject}
+        assigneeId={assigneeFilter || undefined}
+        status={statusFilter || undefined}
         editable
         height={fullscreen ? 760 : 560}
       />

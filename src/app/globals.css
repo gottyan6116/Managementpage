@@ -46,14 +46,13 @@
 }
 
 :root {
-  /* サイドバー (グラデーション + ガラス) — rgba/gradient はここで定義 */
-  --sidebar-from: #3e6dd8;
-  --sidebar-to: #6fa8e6;
-  --sidebar-text: rgba(255, 255, 255, 0.92);
-  --sidebar-text-dim: rgba(255, 255, 255, 0.72);
-  --sidebar-active-bg: rgba(255, 255, 255, 0.95);
-  --sidebar-active-text: #2563eb;
-  --sidebar-hover-bg: rgba(255, 255, 255, 0.14);
+  /* サイドバー: 白背景 + ライトブルーのアクティブ状態 */
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #475569;
+  --sidebar-text-dim: #94a3b8;
+  --sidebar-active-bg: #eff5ff;
+  --sidebar-active-text: #1d4ed8;
+  --sidebar-hover-bg: #f1f5f9;
 }
 
 [data-theme="dark"] {
@@ -66,8 +65,12 @@
   --color-ink-muted: #94a3b8;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.25), 0 12px 30px rgba(0, 0, 0, 0.22);
   --shadow-pop: 0 18px 45px rgba(0, 0, 0, 0.36);
-  --sidebar-active-bg: rgba(255, 255, 255, 0.96);
-  --sidebar-active-text: #1d4ed8;
+  --sidebar-bg: #111827;
+  --sidebar-text: #cbd5e1;
+  --sidebar-text-dim: #94a3b8;
+  --sidebar-active-bg: rgba(37, 99, 235, 0.18);
+  --sidebar-active-text: #93b4fb;
+  --sidebar-hover-bg: #1f2937;
 }
 
 * {
@@ -117,6 +120,15 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@keyframes toast-shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { FileText, ListPlus, Plus, Trash2 } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useCreateDocument, useDeleteDocument, useDocuments, useProjects } from "@/lib/queries/hooks";
+import { useToastStore } from "@/stores/toast-store";
+import { scheduleUndoableDelete } from "@/lib/undo-delete";
 import { formatDue } from "@/lib/date";
 
 export function DocumentsView() {
@@ -14,14 +16,22 @@ export function DocumentsView() {
   const { data: projects } = useProjects("all");
   const createDoc = useCreateDocument();
   const deleteDoc = useDeleteDocument();
+  const pendingDeleteIds = useToastStore((s) => s.pendingDeleteIds);
 
   const projectMap = useMemo(() => new Map(projects?.map((p) => [p.id, p])), [projects]);
+  const visibleDocuments = useMemo(
+    () => documents?.filter((d) => !pendingDeleteIds.has(d.id)),
+    [documents, pendingDeleteIds],
+  );
 
   function handleDelete(event: React.MouseEvent, id: string, title: string) {
     event.preventDefault();
     event.stopPropagation();
-    if (!window.confirm(`「${title}」を削除しますか？`)) return;
-    deleteDoc.mutate(id);
+    scheduleUndoableDelete({
+      ids: [id],
+      message: `「${title}」を削除しました`,
+      onCommit: () => deleteDoc.mutate(id),
+    });
   }
 
   function addDocument() {
@@ -66,7 +76,7 @@ export function DocumentsView() {
             <div key={i} className="h-16 animate-pulse bg-surface-muted/40" />
           ))}
         </div>
-      ) : documents && documents.length > 0 ? (
+      ) : visibleDocuments && visibleDocuments.length > 0 ? (
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs text-ink-muted border-b border-line">
@@ -77,7 +87,7 @@ export function DocumentsView() {
             </tr>
           </thead>
           <tbody>
-            {documents.map((doc) => {
+            {visibleDocuments.map((doc) => {
               const project = doc.projectId ? projectMap.get(doc.projectId) : undefined;
               return (
                 <tr key={doc.id} className="border-b border-line/60 hover:bg-surface-muted/50 transition-colors">

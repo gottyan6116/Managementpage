@@ -30,6 +30,8 @@ import {
 } from "lucide-react";
 import { Avatar } from "@/components/shared/avatar";
 import { AssigneeCombobox } from "@/components/shared/assignee-combobox";
+import { useToastStore } from "@/stores/toast-store";
+import { scheduleUndoableDelete } from "@/lib/undo-delete";
 import {
   useBoardColumns,
   useCreateTask,
@@ -62,6 +64,7 @@ export function BoardKanban({ projectId }: { projectId?: string }) {
   const updateTask = useUpdateTaskDetails({ tab: "all", projectId });
   const deleteTask = useDeleteTask({ tab: "all", projectId });
 
+  const pendingDeleteIds = useToastStore((s) => s.pendingDeleteIds);
   const memberMap = useMemo(() => new Map(members?.map((m) => [m.id, m])), [members]);
   const projectMap = useMemo(() => new Map(projects?.map((p) => [p.id, p])), [projects]);
 
@@ -200,16 +203,13 @@ export function BoardKanban({ projectId }: { projectId?: string }) {
   }
 
   function removeTask(id: string) {
-    setGrouped((prev) =>
-      Object.fromEntries(
-        Object.entries(prev).map(([col, items]) => [
-          col,
-          items.filter((task) => task.id !== id),
-        ]),
-      ),
-    );
+    const task = Object.values(grouped).flat().find((t) => t.id === id);
     if (expandedId === id) setExpandedId(null);
-    deleteTask.mutate(id);
+    scheduleUndoableDelete({
+      ids: [id],
+      message: task ? `「${task.title}」を削除しました` : "Todoを削除しました",
+      onCommit: () => deleteTask.mutate(id),
+    });
   }
 
   if (!columns) return null;
@@ -229,7 +229,7 @@ export function BoardKanban({ projectId }: { projectId?: string }) {
             id={col.id}
             name={col.name}
             dot={COLUMN_DOT[col.id] ?? "#94A3B8"}
-            tasks={grouped[col.id] ?? []}
+            tasks={(grouped[col.id] ?? []).filter((t) => !pendingDeleteIds.has(t.id))}
             memberMap={memberMap}
             projectMap={projectMap}
             members={members ?? []}

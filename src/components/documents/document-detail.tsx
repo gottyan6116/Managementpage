@@ -12,6 +12,7 @@ import {
   useProjects,
   useUpdateDocument,
 } from "@/lib/queries/hooks";
+import { scheduleUndoableDelete } from "@/lib/undo-delete";
 import { formatDue } from "@/lib/date";
 import type { DocumentItem } from "@/types/domain";
 
@@ -51,8 +52,12 @@ function Editor({ doc }: { doc: DocumentItem }) {
   }
 
   function remove() {
-    if (!window.confirm(`「${doc.title}」を削除しますか？`)) return;
-    deleteDoc.mutate(doc.id, { onSuccess: () => router.push("/documents") });
+    router.push("/documents");
+    scheduleUndoableDelete({
+      ids: [doc.id],
+      message: `「${doc.title}」を削除しました`,
+      onCommit: () => deleteDoc.mutate(doc.id),
+    });
   }
 
   const todoCandidates = body

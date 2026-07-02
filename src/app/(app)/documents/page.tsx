@@ -1,14 +1,14 @@
 import { PageHeader } from "@/components/shared/page-header";
-import { DocumentsView } from "@/components/documents/documents-view";
+import { DocumentsAndFiles } from "@/components/documents/documents-and-files";
 
 export default function DocumentsPage() {
   return (
     <>
       <PageHeader
         title="ドキュメント"
-        subtitle="案件に紐づく資料を Markdown で管理"
+        subtitle="案件に紐づく資料・ファイルをまとめて管理"
       />
-      <DocumentsView />
+      <DocumentsAndFiles />
     </>
   );
 }

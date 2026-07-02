@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
-import { TodoKpiRow } from "@/components/dashboard/kpi-row";
+import { TodayFocusCard } from "@/components/dashboard/today-focus";
+import { SpotlightGrid } from "@/components/dashboard/spotlight-grid";
 import { UpcomingList } from "@/components/dashboard/upcoming-list";
-import { TaskTable } from "@/components/dashboard/task-table";
-import { BoardPreview } from "@/components/dashboard/board-preview";
+import { WorkTabs } from "@/components/dashboard/work-tabs";
 import { GanttChart } from "@/components/gantt/gantt-chart";
 import type { TaskTab } from "@/lib/repositories";
 
@@ -18,14 +18,22 @@ export default async function TodoPage({
   return (
     <>
       <PageHeader
-        title="Todo"
+        title="サマリー"
         subtitle="今日のタスクとプロジェクトの進捗を一覧で確認"
       />
 
       <div className="space-y-5">
-        <TodoKpiRow />
+        {/* 行A: 今日のフォーカス (2/3) + 注目の項目 (1/3) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
+          <div className="lg:col-span-2 min-w-0">
+            <TodayFocusCard />
+          </div>
+          <div className="min-w-0">
+            <SpotlightGrid />
+          </div>
+        </div>
 
-        {/* 行A: ガントプレビュー (2/3) + 今後の期限 (1/3) */}
+        {/* 行B: ガントプレビュー (2/3) + 今後の期限 (1/3) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div className="lg:col-span-2 min-w-0">
             <div className="rounded-2xl bg-surface border border-line shadow-card overflow-hidden">
@@ -54,15 +62,8 @@ export default async function TodoPage({
           </div>
         </div>
 
-        {/* 行B: タスク一覧 (2/3) + ボードプレビュー (1/3) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2 min-w-0">
-            <TaskTable limit={6} initialTab={initialTab} />
-          </div>
-          <div className="min-w-0">
-            <BoardPreview />
-          </div>
-        </div>
+        {/* 行C: リスト / ボード / タイムライン */}
+        <WorkTabs initialTab={initialTab} />
       </div>
     </>
   );

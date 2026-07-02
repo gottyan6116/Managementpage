@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Hexagon } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { NAV_SECTIONS } from "./nav";
 import {
   SIDEBAR_WIDTH_COLLAPSED,
@@ -62,38 +62,21 @@ export function Sidebar() {
     >
       <div className="sticky top-0 h-screen p-3">
         <div
-          className="relative h-full rounded-2xl overflow-hidden flex flex-col text-white"
+          className="relative h-full rounded-2xl overflow-hidden flex flex-col border border-line"
           style={{
-            backgroundImage:
-              "linear-gradient(160deg, var(--sidebar-from), var(--sidebar-to))",
-            boxShadow: "var(--shadow-side)",
+            backgroundColor: "var(--sidebar-bg)",
+            boxShadow: "var(--shadow-card)",
           }}
         >
-          {/* 山と湖のシーン (frosted glass 質感) */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 bg-cover bg-bottom opacity-55 mix-blend-soft-light"
-            style={{ backgroundImage: "url('/sidebar-bg.svg')" }}
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 opacity-50 mix-blend-soft-light"
-            style={{
-              backgroundImage:
-                "radial-gradient(120% 50% at 20% 0%, rgba(255,255,255,.4), transparent 60%)",
-            }}
-          />
-
           {/* ロゴ */}
           <div className="relative px-4 pt-5 pb-4">
             <Link href="/todo" className="flex items-center gap-2.5">
-              <span className="relative inline-flex items-center justify-center size-9 shrink-0">
-                <Hexagon className="size-9 fill-white/95 text-white/95" />
-                <span className="absolute text-brand-600 font-extrabold text-sm">P</span>
+              <span className="relative inline-flex items-center justify-center size-9 shrink-0 rounded-xl bg-brand-600">
+                <span className="text-white font-extrabold text-sm">P</span>
               </span>
               {!collapsed && (
                 <span className="min-w-0">
-                  <span className="block font-bold text-[17px] leading-tight">
+                  <span className="block font-bold text-[17px] leading-tight text-ink">
                     ProManage
                   </span>
                   <span className="block text-[10px] text-[color:var(--sidebar-text-dim)] leading-tight">
@@ -147,12 +130,12 @@ export function Sidebar() {
             <button
               type="button"
               className={cn(
-                "w-full flex items-center gap-2.5 rounded-xl bg-white/15 hover:bg-white/20 transition-colors px-3 py-2.5 text-left",
+                "w-full flex items-center gap-2.5 rounded-xl bg-[color:var(--sidebar-hover-bg)] hover:brightness-95 transition-colors px-3 py-2.5 text-left",
                 collapsed && "justify-center px-0",
               )}
             >
               <span
-                className="inline-flex items-center justify-center rounded-full size-8 shrink-0 text-white font-semibold ring-2 ring-white/70"
+                className="inline-flex items-center justify-center rounded-full size-8 shrink-0 text-white font-semibold ring-2 ring-surface"
                 style={{ backgroundColor: me.color }}
               >
                 {me.name.slice(0, 1)}
@@ -160,14 +143,14 @@ export function Sidebar() {
               {!collapsed && (
                 <>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold truncate">
+                    <span className="block text-sm font-semibold truncate text-ink">
                       {me.name}
                     </span>
                     <span className="block text-[11px] text-[color:var(--sidebar-text-dim)] truncate">
                       {me.role}
                     </span>
                   </span>
-                  <ChevronDown className="size-4 shrink-0 opacity-80" />
+                  <ChevronDown className="size-4 shrink-0 text-ink-muted" />
                 </>
               )}
             </button>

@@ -28,6 +28,8 @@ import {
   dateToX,
 } from "@/lib/gantt";
 import { useUiStore } from "@/stores/ui-store";
+import { useToastStore } from "@/stores/toast-store";
+import { scheduleUndoableDelete } from "@/lib/undo-delete";
 import { cn } from "@/lib/utils";
 import type { GanttRow, Member } from "@/types/domain";
 
@@ -60,11 +62,15 @@ function applyDrag(d: DragState): { start: string; due: string } {
 export function GanttChart({
   variant = "full",
   projectId,
+  assigneeId,
+  status,
   height,
   editable = false,
 }: {
   variant?: "full" | "preview";
   projectId?: string;
+  assigneeId?: string;
+  status?: string;
   height?: number;
   editable?: boolean;
 }) {
@@ -77,6 +83,19 @@ export function GanttChart({
   const updateAssignee = useUpdateGanttAssignee();
   const storeDayWidth = useUiStore((s) => s.ganttDayWidth);
   const dayWidth = variant === "preview" ? 22 : storeDayWidth;
+  const pendingDeleteIds = useToastStore((s) => s.pendingDeleteIds);
+  const liveRows = useMemo(
+    () =>
+      (rows ?? [])
+        .filter((r) => !pendingDeleteIds.has(r.id))
+        .filter((r) => {
+          if (r.type === "project") return true;
+          if (assigneeId && !r.assigneeIds.includes(assigneeId)) return false;
+          if (status && r.status !== status) return false;
+          return true;
+        }),
+    [rows, pendingDeleteIds, assigneeId, status],
+  );
 
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
@@ -89,18 +108,41 @@ export function GanttChart({
   const memberMap = useMemo(() => new Map(members?.map((m) => [m.id, m])), [members]);
   const defaultCollapsedProjects = useMemo(() => {
     if (projectId || variant !== "full") return new Set<string>();
-    return new Set((rows ?? []).filter((row) => row.type === "project").map((row) => row.id));
-  }, [projectId, rows, variant]);
+    return new Set(liveRows.filter((row) => row.type === "project").map((row) => row.id));
+  }, [projectId, liveRows, variant]);
   const collapsedProjects = manualCollapsedProjects ?? defaultCollapsedProjects;
   const visibleRows = useMemo(
-    () => visibleGanttRows(rows ?? [], collapsedProjects),
-    [rows, collapsedProjects],
+    () => visibleGanttRows(liveRows, collapsedProjects),
+    [liveRows, collapsedProjects],
   );
 
   const range = useMemo(() => {
-    const dates = (rows ?? []).flatMap((r) => [r.bar?.start, r.bar?.due]);
+    const dates = liveRows.flatMap((r) => [r.bar?.start, r.bar?.due]);
     return computeRange(dates);
-  }, [rows]);
+  }, [liveRows]);
+
+  function childTaskIds(projectRowId: string): string[] {
+    const idx = liveRows.findIndex((r) => r.id === projectRowId);
+    if (idx === -1) return [];
+    const ids: string[] = [];
+    for (let i = idx + 1; i < liveRows.length; i++) {
+      if (liveRows[i].type === "project") break;
+      ids.push(liveRows[i].id);
+    }
+    return ids;
+  }
+
+  function handleDeleteRow(row: GanttRow) {
+    const ids = row.type === "project" ? [row.id, ...childTaskIds(row.id)] : [row.id];
+    scheduleUndoableDelete({
+      ids,
+      message:
+        row.type === "project"
+          ? `「${row.label}」と配下のタスクを削除しました`
+          : `「${row.label}」を削除しました`,
+      onCommit: () => deleteRow.mutate({ id: row.id, type: row.type }),
+    });
+  }
 
   const weeks = useMemo(() => buildWeeks(range.start, range.end), [range]);
   const timelineWidth = range.totalDays * dayWidth;
@@ -226,7 +268,7 @@ export function GanttChart({
                 });
               }}
               onRename={(title) => renameRow.mutate({ id: row.id, type: row.type, title })}
-              onDelete={() => deleteRow.mutate({ id: row.id, type: row.type })}
+              onDelete={() => handleDeleteRow(row)}
               onAssigneeChange={(memberId) =>
                 updateAssignee.mutate({ id: row.id, type: row.type, memberId })
               }
@@ -397,13 +439,6 @@ function LeftRow({
     setEditing(false);
   }
 
-  function handleDelete() {
-    if (isProject) {
-      if (!window.confirm(`「${row.label}」とその配下のタスクを削除しますか？`)) return;
-    }
-    onDelete();
-  }
-
   function handleRowClick(event: React.MouseEvent<HTMLDivElement>) {
     if (!isProject) return;
     if (event.target instanceof HTMLElement) {
@@ -521,7 +556,7 @@ function LeftRow({
       {editable && !editing && (
         <button
           type="button"
-          onClick={handleDelete}
+          onClick={onDelete}
           aria-label={`${row.label}を削除`}
           title="削除"
           className="absolute right-2 inline-flex items-center justify-center size-7 rounded-lg bg-surface text-ink-muted opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition"

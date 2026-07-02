@@ -5,19 +5,22 @@ import { useMemo, useState } from "react";
 import {
   Activity,
   ArrowLeft,
+  Building2,
   FileText,
   Folder,
   LayoutGrid,
   ListTodo,
+  Mail,
   MessageSquare,
   Milestone,
+  Phone,
   Plus,
   Users,
 } from "lucide-react";
 import { BoardKanban } from "@/components/board/board-kanban";
 import { BillingView } from "@/components/billing/billing-view";
 import { GanttChart } from "@/components/gantt/gantt-chart";
-import { AvatarGroup } from "@/components/shared/avatar";
+import { AvatarGroup, Avatar } from "@/components/shared/avatar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PhaseBadge, PriorityBadge, StatusBadge } from "@/components/shared/badges";
 import { ProgressBar } from "@/components/shared/progress-bar";
@@ -25,6 +28,7 @@ import { TaskTable } from "@/components/dashboard/task-table";
 import { TimeView } from "@/components/time/time-view";
 import {
   useBillingRecords,
+  useClient,
   useCreateDocument,
   useCreateProjectActivity,
   useDocuments,
@@ -44,6 +48,7 @@ const TABS = [
   { key: "board", label: "Todo", icon: LayoutGrid },
   { key: "documents", label: "ドキュメント", icon: FileText },
   { key: "files", label: "ファイル", icon: Folder },
+  { key: "client", label: "クライアント", icon: Building2 },
   { key: "members", label: "メンバー", icon: Users },
   { key: "activity", label: "ログ", icon: MessageSquare },
 ] as const;
@@ -142,6 +147,7 @@ export function ProjectDetail({ id }: { id: string }) {
       {tab === "board" && <BoardKanban projectId={id} />}
       {tab === "documents" && <ProjectDocuments projectId={id} />}
       {tab === "files" && <ProjectFiles projectId={id} />}
+      {tab === "client" && <ProjectClient clientId={project.clientId ?? null} />}
       {tab === "members" && <ProjectMembers memberIds={project.memberIds} />}
       {tab === "activity" && <ActivityLog projectId={id} />}
     </div>
@@ -238,6 +244,89 @@ function ProjectFiles({ projectId }: { projectId: string }) {
       ) : (
         <EmptyState icon={Folder} title="案件ファイルがありません" description="提案書、議事録、参考資料をここに集約できます。" />
       )}
+    </div>
+  );
+}
+
+const HEALTH_LABEL: Record<string, { label: string; cls: string }> = {
+  good: { label: "良好", cls: "bg-emerald-50 text-emerald-700" },
+  watch: { label: "要確認", cls: "bg-orange-50 text-orange-700" },
+  risk: { label: "リスク", cls: "bg-red-50 text-red-700" },
+};
+
+function ProjectClient({ clientId }: { clientId: string | null }) {
+  const { data: client, isLoading } = useClient(clientId ?? "");
+  const { data: members } = useMembers();
+
+  if (!clientId) {
+    return (
+      <EmptyState
+        icon={Building2}
+        title="クライアントが未設定です"
+        description="この案件にはクライアント企業が紐づいていません。"
+      />
+    );
+  }
+  if (isLoading) {
+    return <div className="h-40 rounded-2xl border border-line bg-surface animate-pulse" />;
+  }
+  if (!client) {
+    return (
+      <EmptyState icon={Building2} title="クライアント情報が見つかりません" description="" />
+    );
+  }
+
+  const owner = members?.find((m) => m.id === client.ownerMemberId);
+  const health = HEALTH_LABEL[client.health];
+
+  return (
+    <div className="rounded-2xl border border-line bg-surface shadow-card overflow-hidden">
+      <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h2 className="truncate text-base font-semibold text-ink">{client.name}</h2>
+            <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold", health.cls)}>
+              {health.label}
+            </span>
+          </div>
+          <p className="text-xs text-ink-muted mt-1">{client.industry}</p>
+        </div>
+        {owner && <Avatar member={owner} size="sm" />}
+      </div>
+      <div className="p-5">
+        <p className="text-xs font-semibold text-ink-muted">担当者連絡先</p>
+        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+          {client.contacts.length > 0 ? client.contacts.map((contact) => (
+            <div key={contact.id} className="rounded-xl bg-app px-3 py-3">
+              <p className="text-sm font-semibold text-ink">{contact.name}</p>
+              <p className="text-xs text-ink-muted">{contact.role}</p>
+              <div className="mt-2 space-y-1 text-xs text-ink-soft">
+                <p className="flex items-center gap-1.5"><Mail className="size-3.5" />{contact.email}</p>
+                <p className="flex items-center gap-1.5"><Phone className="size-3.5" />{contact.phone}</p>
+              </div>
+            </div>
+          )) : (
+            <p className="text-sm text-ink-muted">連絡先は未登録です</p>
+          )}
+        </div>
+      </div>
+      <div className="border-t border-line px-5 py-4">
+        <p className="text-xs font-semibold text-ink-muted">対応履歴</p>
+        <div className="mt-3 space-y-3">
+          {client.interactions.length > 0 ? client.interactions.map((item) => (
+            <div key={item.id} className="flex gap-3">
+              <span className="mt-1 size-2 rounded-full bg-brand-500" />
+              <div className="min-w-0">
+                <p className="text-xs text-ink-muted">{formatDue(item.date)} / {item.channel}</p>
+                <p className="text-sm text-ink-soft">{item.summary}</p>
+                {item.nextAction && <p className="mt-1 text-xs font-medium text-brand-600">次: {item.nextAction}</p>}
+              </div>
+            </div>
+          )) : (
+            <p className="text-sm text-ink-muted">対応履歴はまだありません</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
