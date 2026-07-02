@@ -122,6 +122,13 @@ promanage/
 
 ---
 
+## 5.5 UI 品質チェック・新規ページ制作
+
+- 新しい画面・コンポーネントを作る、または既存 UI の品質を見直す際は、Claude Code の
+  `frontend-design` スキル（`anthropic-skills:frontend-design` / plugins/frontend-design）を使うこと。
+  汎用的な「AI っぽい」見た目を避け、作り込まれた UI にするためのガイドを提供する。
+- UI/UX のレビュー・改善提案・配色・タイポグラフィ選定には `ui-ux-pro-max` スキルも活用する。
+
 ## 6. AI エージェントへの作業手順（推奨フロー）
 
 1. `docs/00_overview.md` と `docs/06_roadmap.md` を読み、**今のフェーズのタスク**を1つ選ぶ。
