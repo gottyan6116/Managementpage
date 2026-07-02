@@ -23,13 +23,14 @@ export function SpotlightGrid() {
     label: string;
     value: number;
     icon: LucideIcon;
-    tone: string;
+    cardClass: string;
+    iconClass: string;
     href: string;
   }[] = [
-    { label: "期限超過", value: overdue, icon: AlertTriangle, tone: "text-red-600 bg-red-50", href: "/todo?tab=overdue" },
-    { label: "今日締切", value: dueToday, icon: Calendar, tone: "text-brand-600 bg-brand-50", href: "/todo" },
-    { label: "今週締切", value: dueThisWeek, icon: Clock, tone: "text-orange-600 bg-orange-50", href: "/gantt" },
-    { label: "未読通知", value: unread, icon: Bell, tone: "text-purple-600 bg-purple-50", href: "/todo" },
+    { label: "期限超過", value: overdue, icon: AlertTriangle, cardClass: "kpi-danger", iconClass: "kpi-danger-icon", href: "/todo?tab=overdue" },
+    { label: "今日締切", value: dueToday, icon: Calendar, cardClass: "kpi-warning", iconClass: "kpi-warning-icon", href: "/todo" },
+    { label: "今週締切", value: dueThisWeek, icon: Clock, cardClass: "kpi-blue", iconClass: "kpi-blue-icon", href: "/gantt" },
+    { label: "未読通知", value: unread, icon: Bell, cardClass: "kpi-purple", iconClass: "kpi-purple-icon", href: "/todo" },
   ];
 
   return (
@@ -40,9 +41,12 @@ export function SpotlightGrid() {
           <Link
             key={item.label}
             href={item.href}
-            className="rounded-2xl bg-surface border border-line shadow-card p-4 hover:shadow-pop transition-shadow flex flex-col justify-between min-h-[104px]"
+            className={cn(
+              "rounded-2xl p-4 hover:shadow-pop transition-shadow flex flex-col justify-between min-h-[104px]",
+              item.cardClass,
+            )}
           >
-            <span className={cn("inline-flex items-center justify-center size-8 rounded-lg", item.tone)}>
+            <span className={cn("inline-flex items-center justify-center size-8 rounded-lg", item.iconClass)}>
               <Icon className="size-4" />
             </span>
             <div className="mt-2">

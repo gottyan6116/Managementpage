@@ -408,7 +408,7 @@ function Column({
                 type="button"
                 onClick={submit}
                 disabled={!title.trim() || adding}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-xs font-semibold text-white hover:bg-brand-700 disabled:pointer-events-none disabled:opacity-50"
+                className="primary-button inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-white disabled:pointer-events-none disabled:opacity-50"
               >
                 <Check className="size-3.5" />
                 作成
@@ -776,7 +776,7 @@ function Card({
             <button
               type="button"
               onClick={save}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-xs font-semibold text-white hover:bg-brand-700"
+              className="primary-button inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-white"
             >
               <Save className="size-3.5" />
               保存

@@ -27,7 +27,7 @@ export function TodayFocusCard() {
 
   if (!focus) {
     return (
-      <div className="rounded-2xl bg-surface border border-line shadow-card p-6 h-full flex items-center justify-center text-sm text-ink-muted">
+      <div className="glass-card rounded-2xl p-6 h-full flex items-center justify-center text-sm text-ink-muted">
         今取り組むべき未完了タスクはありません
       </div>
     );
@@ -37,7 +37,7 @@ export function TodayFocusCard() {
   const remain = focus.dueDate ? daysUntil(focus.dueDate) : null;
 
   return (
-    <div className="rounded-2xl bg-surface border border-line shadow-card p-6 h-full flex flex-col">
+    <div className="glass-card rounded-2xl p-6 h-full flex flex-col">
       <div className="flex items-center justify-between gap-3">
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600">
           <Target className="size-3.5" />
@@ -72,7 +72,7 @@ export function TodayFocusCard() {
         <button
           type="button"
           onClick={() => router.push("/board")}
-          className="inline-flex items-center gap-1.5 h-9 rounded-lg bg-brand-600 hover:bg-brand-700 px-3.5 text-sm font-semibold text-white transition-colors"
+          className="primary-button inline-flex items-center gap-1.5 h-9 rounded-lg px-3.5 text-sm font-semibold text-white transition-colors"
         >
           <Play className="size-3.5" />
           作業を開く

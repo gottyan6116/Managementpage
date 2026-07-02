@@ -61,13 +61,7 @@ export function Sidebar() {
       style={{ width }}
     >
       <div className="sticky top-0 h-screen p-3">
-        <div
-          className="relative h-full rounded-2xl overflow-hidden flex flex-col border border-line"
-          style={{
-            backgroundColor: "var(--sidebar-bg)",
-            boxShadow: "var(--shadow-card)",
-          }}
-        >
+        <div className="sidebar-glass relative h-full rounded-2xl overflow-hidden flex flex-col">
           {/* ロゴ */}
           <div className="relative px-4 pt-5 pb-4">
             <Link href="/todo" className="flex items-center gap-2.5">
@@ -111,7 +105,7 @@ export function Sidebar() {
                           "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                           collapsed && "justify-center px-0",
                           active
-                            ? "bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)] shadow-sm"
+                            ? "sidebar-nav-active"
                             : "text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)]",
                         )}
                       >
@@ -130,7 +124,7 @@ export function Sidebar() {
             <button
               type="button"
               className={cn(
-                "w-full flex items-center gap-2.5 rounded-xl bg-[color:var(--sidebar-hover-bg)] hover:brightness-95 transition-colors px-3 py-2.5 text-left",
+                "profile-card w-full flex items-center gap-2.5 rounded-xl hover:brightness-[0.98] transition-colors px-3 py-2.5 text-left",
                 collapsed && "justify-center px-0",
               )}
             >

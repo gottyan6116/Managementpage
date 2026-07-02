@@ -45,7 +45,7 @@ export function NewProjectButton() {
           onClick={submit}
           disabled={!name.trim() || createProject.isPending}
           aria-label="案件を作成"
-          className="inline-flex items-center justify-center size-9 rounded-lg bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50"
+          className="primary-button inline-flex items-center justify-center size-9 rounded-lg text-white disabled:opacity-50"
         >
           <Check className="size-4" />
         </button>
@@ -68,7 +68,7 @@ export function NewProjectButton() {
     <button
       type="button"
       onClick={() => setOpen(true)}
-      className="inline-flex items-center gap-1.5 h-9 rounded-lg bg-brand-600 hover:bg-brand-700 px-3.5 text-sm font-semibold text-white transition-colors"
+      className="primary-button inline-flex items-center gap-1.5 h-9 rounded-lg px-3.5 text-sm font-semibold text-white transition-colors"
     >
       <Plus className="size-4" />
       新規案件

@@ -101,7 +101,7 @@ export function TaskTable({
   const rowPadding = compact ? "py-2" : "py-3.5";
 
   return (
-    <SectionCard bodyClassName="px-0 pb-0">
+    <SectionCard bodyClassName="px-0 pb-0" className="data-card">
       {/* タブ + ツール */}
       <div className="flex items-center justify-between gap-3 px-6 -mt-1 border-b border-line">
         <div className="flex items-center gap-5 overflow-x-auto">

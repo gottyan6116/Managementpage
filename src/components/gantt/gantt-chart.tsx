@@ -227,7 +227,7 @@ export function GanttChart({
   }
 
   return (
-    <div className="flex rounded-2xl border border-line bg-surface shadow-card overflow-hidden">
+    <div className="data-card flex rounded-2xl overflow-hidden">
       {/* ===== 左: ツリー ===== */}
       <div className="shrink-0 border-r border-line" style={{ width: leftWidth }}>
         <div
@@ -341,7 +341,7 @@ export function GanttChart({
 
             {/* 今日ライン */}
             <div
-              className="absolute top-0 bottom-0 w-px bg-brand-600/70 pointer-events-none z-20"
+              className="gantt-today-line absolute top-0 bottom-0 w-px pointer-events-none z-20"
               style={{ left: todayX }}
             >
               <span className="absolute -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-600 px-1.5 py-0.5 text-[9px] font-bold text-white">
@@ -641,7 +641,12 @@ function BarRow({
       >
         <div
           className="absolute inset-y-0 left-0 rounded-full pointer-events-none"
-          style={{ width: `${row.progress}%`, backgroundColor: row.color }}
+          style={{
+            width: `${row.progress}%`,
+            backgroundColor: row.color,
+            backgroundImage:
+              "linear-gradient(90deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.06) 45%, rgba(0,0,0,0.06) 100%)",
+          }}
         />
         {canEdit && (
           <>

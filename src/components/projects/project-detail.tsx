@@ -196,7 +196,7 @@ function ProjectDocuments({ projectId }: { projectId: string }) {
         <button
           type="button"
           onClick={createMeetingDoc}
-          className="inline-flex items-center gap-1.5 h-9 rounded-lg bg-brand-600 px-3 text-sm font-semibold text-white hover:bg-brand-700"
+          className="primary-button inline-flex items-center gap-1.5 h-9 rounded-lg px-3 text-sm font-semibold text-white"
         >
           <Plus className="size-4" />
           議事録を作成
@@ -381,7 +381,7 @@ function ActivityLog({ projectId }: { projectId: string }) {
         <button
           type="button"
           onClick={submit}
-          className="mt-3 inline-flex items-center gap-1.5 h-9 rounded-lg bg-brand-600 px-3 text-sm font-semibold text-white hover:bg-brand-700"
+          className="primary-button mt-3 inline-flex items-center gap-1.5 h-9 rounded-lg px-3 text-sm font-semibold text-white"
         >
           <MessageSquare className="size-4" />
           コメントを追加

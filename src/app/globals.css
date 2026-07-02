@@ -6,13 +6,15 @@
 */
 
 @theme {
-  /* ===== Brand / Accent ===== */
-  --color-brand-50: #eff5ff;
-  --color-brand-100: #dbe8fe;
-  --color-brand-300: #93b4fb;
-  --color-brand-500: #3b82f6;
-  --color-brand-600: #2563eb;
-  --color-brand-700: #1d4ed8;
+  /* ===== Brand / Accent (Glassmorphism primary scale) ===== */
+  --color-brand-50: #f4f7ff;
+  --color-brand-100: #e9f1ff;
+  --color-brand-200: #d8e6ff;
+  --color-brand-300: #aec8ff;
+  --color-brand-400: #6f9cf5;
+  --color-brand-500: #2f6bee;
+  --color-brand-600: #245edb;
+  --color-brand-700: #1d4fc2;
 
   /* プロジェクト識別色 */
   --color-teal-500: #14b8a6;
@@ -21,10 +23,10 @@
   --color-sky-500: #38bdf8;
 
   /* ===== Neutral ===== */
-  --color-app: #f7f9fc; /* アプリ全体背景 */
-  --color-surface: #ffffff; /* カード/パネル */
+  --color-app: #f7f9fd; /* アプリ全体背景 (グラデーションのベース色) */
+  --color-surface: rgba(255, 255, 255, 0.95); /* カード/パネル (薄いガラス) */
   --color-surface-muted: #f1f5f9; /* テーブルヘッダ・hover */
-  --color-line: #e8edf3; /* 境界線 */
+  --color-line: #e4eaf3; /* 境界線 */
   --color-ink: #0f172a; /* 主要テキスト */
   --color-ink-soft: #475569; /* 補助テキスト */
   --color-ink-muted: #94a3b8; /* キャプション/プレースホルダ */
@@ -36,9 +38,9 @@
   --radius-xl: 16px;
   --radius-2xl: 20px;
 
-  /* ===== Shadow (淡く広い) ===== */
-  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 16px rgba(16, 24, 40, 0.06);
-  --shadow-pop: 0 8px 30px rgba(16, 24, 40, 0.12);
+  /* ===== Shadow (淡く広い、青みがかった影) ===== */
+  --shadow-card: 0 14px 34px rgba(48, 70, 108, 0.065), 0 3px 8px rgba(48, 70, 108, 0.035);
+  --shadow-pop: 0 18px 45px rgba(52, 76, 120, 0.14);
   --shadow-side: 0 8px 40px rgba(40, 80, 160, 0.25);
 
   /* ===== Font ===== */
@@ -53,6 +55,74 @@
   --sidebar-active-bg: #eff5ff;
   --sidebar-active-text: #1d4ed8;
   --sidebar-hover-bg: #f1f5f9;
+
+  /* ==================================================
+     Glassmorphism デザイントークン
+  ================================================== */
+
+  /* Base background */
+  --app-bg-base: #f7f9fd;
+  --app-bg-blue-1: #e5efff;
+  --app-bg-blue-2: #edf5ff;
+  --app-bg-cyan: #ecf8ff;
+  --app-bg-lavender-1: #f0ebff;
+  --app-bg-lavender-2: #f7f2ff;
+  --app-bg-pink: #fff1f6;
+
+  /* Primary */
+  --primary-50: #f4f7ff;
+  --primary-100: #e9f1ff;
+  --primary-200: #d8e6ff;
+  --primary-300: #aec8ff;
+  --primary-400: #6f9cf5;
+  --primary-500: #2f6bee;
+  --primary-600: #245edb;
+  --primary-700: #1d4fc2;
+
+  /* Text */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #718096;
+  --text-muted: #94a3b8;
+  --text-placeholder: #9aa9c0;
+
+  /* Surfaces */
+  --surface-solid: #ffffff;
+  --surface-glass-strong: rgba(255, 255, 255, 0.88);
+  --surface-glass-default: rgba(255, 255, 255, 0.74);
+  --surface-glass-soft: rgba(255, 255, 255, 0.6);
+  --surface-blue-soft: #f2f6ff;
+  --surface-lavender-soft: #f7f3ff;
+  --surface-pink-soft: #fff5f7;
+  --surface-orange-soft: #fff8f1;
+
+  /* Borders */
+  --border-default: #e4eaf3;
+  --border-soft: rgba(214, 225, 242, 0.72);
+  --border-glass: rgba(255, 255, 255, 0.88);
+  --border-blue: #cbdcff;
+
+  /* Status */
+  --danger: #ef4444;
+  --danger-soft: #fff0f2;
+  --danger-border: #fde2e7;
+  --warning: #f59e0b;
+  --warning-soft: #fff5e8;
+  --warning-border: #fdebd0;
+  --success: #0faa83;
+  --success-soft: #eafaf5;
+  --success-border: #ccefe4;
+  --purple: #8b5cf6;
+  --purple-soft: #f5efff;
+  --purple-border: #e8dcff;
+
+  /* Gantt */
+  --gantt-green-start: #13b89a;
+  --gantt-green-end: #08a67f;
+  --gantt-purple-start: #7c5ce7;
+  --gantt-purple-end: #9869eb;
+  --gantt-blue-start: #3685ed;
+  --gantt-blue-end: #2168dc;
 }
 
 [data-theme="dark"] {
@@ -83,11 +153,214 @@ html {
 
 body {
   height: 100%;
-  background: var(--color-app);
+  background-color: var(--app-bg-base);
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-feature-settings: "palt";
   -webkit-font-smoothing: antialiased;
+}
+
+/* ==================================================
+   Glassmorphism ユーティリティ
+================================================== */
+
+.app-background {
+  background-color: var(--app-bg-base);
+  background-image:
+    radial-gradient(
+      900px 680px at -8% -10%,
+      rgba(213, 229, 255, 0.95) 0%,
+      rgba(229, 239, 255, 0.62) 36%,
+      rgba(229, 239, 255, 0) 72%
+    ),
+    radial-gradient(
+      760px 540px at 76% -4%,
+      rgba(225, 235, 255, 0.8) 0%,
+      rgba(239, 244, 255, 0.48) 42%,
+      rgba(239, 244, 255, 0) 74%
+    ),
+    radial-gradient(
+      820px 680px at 106% 92%,
+      rgba(214, 230, 255, 0.9) 0%,
+      rgba(229, 239, 255, 0.52) 42%,
+      rgba(229, 239, 255, 0) 76%
+    ),
+    radial-gradient(
+      620px 520px at 2% 105%,
+      rgba(238, 229, 255, 0.78) 0%,
+      rgba(246, 240, 255, 0.42) 45%,
+      rgba(246, 240, 255, 0) 78%
+    ),
+    radial-gradient(
+      520px 420px at 102% 20%,
+      rgba(255, 235, 243, 0.55) 0%,
+      rgba(255, 244, 248, 0.28) 48%,
+      rgba(255, 244, 248, 0) 78%
+    );
+  background-attachment: fixed;
+}
+
+.sidebar-glass {
+  background:
+    radial-gradient(
+      420px 360px at 0% 100%,
+      rgba(232, 240, 255, 0.74) 0%,
+      rgba(244, 239, 255, 0.48) 46%,
+      rgba(255, 255, 255, 0) 76%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.9) 0%,
+      rgba(251, 252, 255, 0.82) 48%,
+      rgba(246, 249, 255, 0.74) 100%
+    );
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 18px 45px rgba(52, 76, 120, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(22px) saturate(145%);
+  -webkit-backdrop-filter: blur(22px) saturate(145%);
+}
+
+.header-glass {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.82) 0%,
+      rgba(246, 249, 255, 0.76) 48%,
+      rgba(255, 255, 255, 0.84) 100%
+    );
+  border-bottom: 1px solid rgba(220, 229, 243, 0.66);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+.glass-card {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.9) 0%,
+      rgba(255, 255, 255, 0.76) 52%,
+      rgba(247, 250, 255, 0.7) 100%
+    );
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 16px 40px rgba(55, 78, 118, 0.07),
+    0 4px 12px rgba(55, 78, 118, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(18px) saturate(138%);
+  -webkit-backdrop-filter: blur(18px) saturate(138%);
+}
+
+.data-card {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.96) 0%,
+      rgba(252, 253, 255, 0.94) 100%
+    );
+  border: 1px solid rgba(222, 229, 240, 0.88);
+  box-shadow:
+    0 14px 34px rgba(48, 70, 108, 0.065),
+    0 3px 8px rgba(48, 70, 108, 0.035);
+}
+
+.sidebar-nav-active {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(231, 240, 255, 0.96) 0%,
+      rgba(240, 245, 255, 0.9) 58%,
+      rgba(242, 237, 255, 0.62) 100%
+    );
+  color: #245edb;
+  border: 1px solid rgba(199, 217, 255, 0.72);
+  box-shadow:
+    inset 3px 0 0 #2f6bee,
+    0 5px 14px rgba(47, 107, 238, 0.07);
+}
+
+.primary-button {
+  background-color: #2f6bee;
+  background-image: linear-gradient(135deg, #3978f2 0%, #2f6bee 45%, #245edb 100%);
+  box-shadow:
+    0 8px 18px rgba(47, 107, 238, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.primary-button:hover {
+  background-image: linear-gradient(135deg, #2f6be8 0%, #245edb 48%, #1d4fc2 100%);
+  box-shadow: 0 10px 24px rgba(47, 107, 238, 0.28);
+}
+
+.kpi-danger {
+  background: linear-gradient(135deg, rgba(255, 249, 250, 0.96) 0%, rgba(255, 239, 242, 0.78) 100%);
+  border: 1px solid #fde2e7;
+}
+.kpi-danger-icon {
+  background: #fff0f2;
+  color: #ef4444;
+}
+.kpi-warning {
+  background: linear-gradient(135deg, rgba(255, 251, 246, 0.96) 0%, rgba(255, 242, 230, 0.76) 100%);
+  border: 1px solid #fdebd0;
+}
+.kpi-warning-icon {
+  background: #fff4e6;
+  color: #f59e0b;
+}
+.kpi-blue {
+  background: linear-gradient(135deg, rgba(248, 251, 255, 0.96) 0%, rgba(232, 240, 255, 0.8) 100%);
+  border: 1px solid #dce8ff;
+}
+.kpi-blue-icon {
+  background: #eaf2ff;
+  color: #3b82f6;
+}
+.kpi-purple {
+  background: linear-gradient(135deg, rgba(251, 249, 255, 0.96) 0%, rgba(240, 234, 255, 0.78) 100%);
+  border: 1px solid #e8dcff;
+}
+.kpi-purple-icon {
+  background: #f5efff;
+  color: #8b5cf6;
+}
+
+.gantt-green {
+  background: linear-gradient(90deg, #13b89a 0%, #0caf8c 48%, #08a67f 100%);
+}
+.gantt-purple {
+  background: linear-gradient(90deg, #7c5ce7 0%, #8862e9 52%, #9869eb 100%);
+}
+.gantt-blue {
+  background: linear-gradient(90deg, #3685ed 0%, #2f78e8 50%, #2168dc 100%);
+}
+.gantt-today-line {
+  background: linear-gradient(
+    180deg,
+    rgba(47, 107, 238, 0.12) 0%,
+    #2f6bee 12%,
+    #2f6bee 88%,
+    rgba(47, 107, 238, 0.12) 100%
+  );
+}
+
+.search-input {
+  background: linear-gradient(135deg, rgba(250, 252, 255, 0.92) 0%, rgba(240, 245, 255, 0.82) 100%);
+  border: 1px solid rgba(215, 225, 240, 0.8);
+  color: var(--text-secondary);
+}
+.search-input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.profile-card {
+  background: linear-gradient(
+    135deg,
+    rgba(248, 251, 255, 0.94) 0%,
+    rgba(232, 240, 255, 0.82) 66%,
+    rgba(241, 235, 255, 0.68) 100%
+  );
+  border: 1px solid rgba(221, 230, 244, 0.8);
 }
 
 /* フォーカスリング (アクセシビリティ) */

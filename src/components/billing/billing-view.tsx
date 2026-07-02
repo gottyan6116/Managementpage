@@ -151,7 +151,7 @@ function BillingRow({
           <button
             type="button"
             onClick={() => onSave({ invoicedAmount: invoiced, closingReminder: memo })}
-            className="inline-flex items-center justify-center size-9 rounded-lg bg-brand-600 text-white hover:bg-brand-700"
+            className="primary-button inline-flex items-center justify-center size-9 rounded-lg text-white"
             aria-label="請求情報を保存"
           >
             <Save className="size-4" />

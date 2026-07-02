@@ -47,7 +47,7 @@ export function DocumentsView() {
   }
 
   return (
-    <div className="rounded-2xl bg-surface border border-line shadow-card overflow-hidden">
+    <div className="data-card rounded-2xl overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-line">
         <h2 className="text-base font-semibold text-ink">ドキュメント一覧</h2>
         <div className="flex items-center gap-2">
@@ -62,7 +62,7 @@ export function DocumentsView() {
           <button
             type="button"
             onClick={addDocument}
-            className="inline-flex items-center gap-1.5 h-9 rounded-lg bg-brand-600 hover:bg-brand-700 px-3.5 text-sm font-semibold text-white transition-colors"
+            className="primary-button inline-flex items-center gap-1.5 h-9 rounded-lg px-3.5 text-sm font-semibold text-white transition-colors"
           >
             <Plus className="size-4" />
             新規ドキュメント
@@ -141,7 +141,7 @@ export function DocumentsView() {
             <button
               type="button"
               onClick={addDocument}
-              className="inline-flex items-center gap-1.5 h-9 rounded-lg bg-brand-600 hover:bg-brand-700 px-3.5 text-sm font-semibold text-white transition-colors"
+              className="primary-button inline-flex items-center gap-1.5 h-9 rounded-lg px-3.5 text-sm font-semibold text-white transition-colors"
             >
               <Plus className="size-4" />
               最初のドキュメントを作成

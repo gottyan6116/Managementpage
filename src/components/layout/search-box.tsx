@@ -78,7 +78,7 @@ export function SearchBox() {
 
   return (
     <div ref={boxRef} className="relative w-full max-w-md">
-      <div className="flex items-center gap-2.5 h-10 rounded-xl border border-line bg-app px-3.5 focus-within:border-brand-300 transition-colors">
+      <div className="search-input flex items-center gap-2.5 h-10 rounded-xl px-3.5 focus-within:border-brand-300 transition-colors">
         <Search className="size-4 shrink-0 text-ink-muted" />
         <input
           ref={inputRef}

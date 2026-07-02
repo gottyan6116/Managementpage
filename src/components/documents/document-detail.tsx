@@ -24,7 +24,7 @@ export function DocumentDetail({ id }: { id: string }) {
   }
   if (!doc) {
     return (
-      <div className="rounded-2xl bg-surface border border-line shadow-card p-10 text-center">
+      <div className="data-card rounded-2xl p-10 text-center">
         <p className="text-ink-soft">ドキュメントが見つかりませんでした。</p>
         <Link href="/documents" className="text-brand-600 text-sm mt-2 inline-block">
           ← 一覧へ戻る
@@ -104,7 +104,7 @@ function Editor({ doc }: { doc: DocumentItem }) {
           type="button"
           onClick={save}
           disabled={!dirty}
-          className="inline-flex items-center gap-1.5 h-9 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed px-3.5 text-sm font-semibold text-white transition-colors shrink-0"
+          className="primary-button inline-flex items-center gap-1.5 h-9 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed px-3.5 text-sm font-semibold text-white transition-colors shrink-0"
         >
           {dirty ? "保存" : (<><Check className="size-4" /> 保存済み</>)}
         </button>
@@ -130,7 +130,7 @@ function Editor({ doc }: { doc: DocumentItem }) {
 
       {/* 2ペイン: エディタ / プレビュー */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
-        <div className="flex flex-col rounded-2xl bg-surface border border-line shadow-card overflow-hidden">
+        <div className="data-card flex flex-col rounded-2xl overflow-hidden">
           <div className="flex items-center gap-1.5 px-4 h-10 border-b border-line text-xs font-medium text-ink-muted">
             <Pencil className="size-3.5" /> Markdown
           </div>
@@ -141,7 +141,7 @@ function Editor({ doc }: { doc: DocumentItem }) {
             className="flex-1 w-full resize-none outline-none bg-transparent px-5 py-4 text-sm leading-7 text-ink-soft font-mono"
           />
         </div>
-        <div className="flex flex-col rounded-2xl bg-surface border border-line shadow-card overflow-hidden">
+        <div className="data-card flex flex-col rounded-2xl overflow-hidden">
           <div className="flex items-center justify-between px-4 h-10 border-b border-line text-xs font-medium text-ink-muted">
             <span className="inline-flex items-center gap-1.5">
               <Eye className="size-3.5" /> プレビュー

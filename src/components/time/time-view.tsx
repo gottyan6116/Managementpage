@@ -152,7 +152,7 @@ export function TimeView({ projectId }: { projectId?: string }) {
             <button
               type="button"
               onClick={submit}
-              className="inline-flex w-full items-center justify-center gap-1.5 h-10 rounded-lg bg-brand-600 px-3 text-sm font-semibold text-white hover:bg-brand-700"
+              className="primary-button inline-flex w-full items-center justify-center gap-1.5 h-10 rounded-lg px-3 text-sm font-semibold text-white"
             >
               <Plus className="size-4" />
               工数を追加

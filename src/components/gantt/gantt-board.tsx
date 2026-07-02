@@ -124,7 +124,7 @@ export function GanttBoard() {
                 onClick={submitNewProject}
                 disabled={!newProjectName.trim() || createProject.isPending}
                 aria-label="プロジェクトを作成"
-                className="inline-flex items-center justify-center size-8 rounded-full bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50"
+                className="primary-button inline-flex items-center justify-center size-8 rounded-full text-white disabled:opacity-50"
               >
                 <Check className="size-4" />
               </button>
@@ -263,7 +263,7 @@ export function GanttBoard() {
               type="button"
               onClick={submitNewTask}
               disabled={!newTaskTitle.trim() || !newTaskProjectId || createTask.isPending}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:pointer-events-none disabled:opacity-50"
+              className="primary-button inline-flex h-9 items-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold text-white disabled:pointer-events-none disabled:opacity-50"
             >
               <Check className="size-4" />
               作成

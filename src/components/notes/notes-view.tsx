@@ -32,9 +32,9 @@ export function NotesView() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-12rem)] min-h-[560px] min-w-[760px] rounded-2xl border border-line bg-surface shadow-card overflow-hidden">
+    <div className="flex h-[calc(100vh-12rem)] min-h-[560px] rounded-2xl border border-line bg-surface shadow-card overflow-x-auto">
       {/* ===== 列1: セクション ===== */}
-      <div className="w-52 shrink-0 border-r border-line bg-surface-muted/30 flex flex-col">
+      <div className="w-40 sm:w-52 shrink-0 border-r border-line bg-surface-muted/30 flex flex-col">
         <button className="flex items-center gap-1.5 px-4 h-12 border-b border-line text-sm font-semibold text-ink hover:bg-surface-muted/60 transition-colors">
           <span className="inline-flex items-center justify-center size-5 rounded bg-[#7719AA] text-white text-[10px] font-bold">
             N
@@ -74,7 +74,7 @@ export function NotesView() {
       </div>
 
       {/* ===== 列2: ページ ===== */}
-      <div className="w-64 shrink-0 border-r border-line flex flex-col">
+      <div className="w-52 sm:w-64 shrink-0 border-r border-line flex flex-col">
         <div className="flex items-center justify-between px-4 h-12 border-b border-line">
           <span className="text-sm font-semibold text-ink truncate">{activeSection?.name}</span>
         </div>
@@ -117,7 +117,7 @@ export function NotesView() {
       </div>
 
       {/* ===== 列3: エディタ ===== */}
-      <div className="flex-1 min-w-[380px] flex flex-col">
+      <div className="flex-1 min-w-[300px] sm:min-w-[380px] flex flex-col">
         <div className="h-1" style={{ backgroundColor: activeSection?.color ?? "#7719AA" }} />
         {activeNote ? (
           <NoteEditor key={activeNote.id} note={activeNote} />

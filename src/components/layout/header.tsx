@@ -56,7 +56,7 @@ export function Header() {
   }, [dark]);
 
   return (
-    <header className="h-16 shrink-0 flex items-center gap-4 px-6 bg-surface border-b border-line">
+    <header className="header-glass h-16 shrink-0 flex items-center gap-4 px-6">
       <button
         type="button"
         onClick={toggleSidebar}
@@ -135,7 +135,7 @@ export function Header() {
             onClick={() => setCreateOpen((v) => !v)}
             aria-haspopup="menu"
             aria-expanded={createOpen}
-            className="inline-flex items-center gap-1.5 h-10 rounded-xl bg-brand-600 hover:bg-brand-700 px-3.5 text-sm font-semibold text-white transition-colors"
+            className="primary-button inline-flex items-center gap-1.5 h-10 rounded-xl px-3.5 text-sm font-semibold text-white transition-colors"
           >
             <Plus className="size-4" />
             <span className="hidden sm:inline">新規作成</span>

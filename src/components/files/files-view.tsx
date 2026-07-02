@@ -103,7 +103,7 @@ export function FilesView() {
             return (
               <div
                 key={f.id}
-                className="group rounded-2xl bg-surface border border-line shadow-card p-4 hover:shadow-pop transition-shadow"
+                className="data-card group rounded-2xl p-4 hover:shadow-pop transition-shadow"
               >
                 <div className="flex items-start justify-between">
                   <span
@@ -135,7 +135,7 @@ export function FilesView() {
           })}
         </div>
       ) : (
-        <div className="rounded-2xl bg-surface border border-line shadow-card overflow-hidden">
+        <div className="data-card rounded-2xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-ink-muted border-b border-line">

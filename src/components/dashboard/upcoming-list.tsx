@@ -15,7 +15,13 @@ export function UpcomingList() {
   }, [projects]);
 
   return (
-    <SectionCard title="今後の期限" actionHref="/gantt" actionLabel="すべて見る" bodyClassName="pb-3">
+    <SectionCard
+      title="今後の期限"
+      actionHref="/gantt"
+      actionLabel="すべて見る"
+      bodyClassName="pb-3"
+      className="glass-card"
+    >
       <ul className="divide-y divide-line">
         {items?.map((item) => (
           <li key={`${item.kind}-${item.id}`} className="flex items-center gap-3 py-3">

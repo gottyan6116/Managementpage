@@ -39,7 +39,7 @@ export function ProjectsSidePane() {
   return (
     <div className="space-y-5">
       {/* 要注意案件 */}
-      <SectionCard title="要注意案件" bodyClassName="pb-4">
+      <SectionCard title="要注意案件" bodyClassName="pb-4" className="glass-card">
         <ul className="space-y-2.5">
           {atRisk?.map((p) => (
             <li
@@ -69,7 +69,7 @@ export function ProjectsSidePane() {
       </SectionCard>
 
       {/* 今週のアクション */}
-      <SectionCard title="今週のアクション" bodyClassName="pb-4">
+      <SectionCard title="今週のアクション" bodyClassName="pb-4" className="glass-card">
         <ul className="space-y-1">
           {actions?.map((a) => (
             <li key={a.id}>
@@ -117,6 +117,7 @@ export function ProjectsSidePane() {
           </span>
         }
         bodyClassName="pb-4"
+        className="glass-card"
       >
         <div className="flex items-center gap-5">
           <Donut

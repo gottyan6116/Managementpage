@@ -113,7 +113,7 @@ export function ProjectsTable({
   }
 
   return (
-    <SectionCard bodyClassName="px-0 pb-0">
+    <SectionCard bodyClassName="px-0 pb-0" className="data-card">
       <div className="flex items-center justify-between gap-3 px-6 -mt-1 border-b border-line">
         <div className="flex items-center gap-5 overflow-x-auto">
           {TABS.map((t) => {
@@ -309,7 +309,7 @@ function ExpandedRow({
                 type="button"
                 onClick={saveMemo}
                 disabled={!memo.trim() || createActivity.isPending}
-                className="mt-2 inline-flex h-8 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-xs font-semibold text-white hover:bg-brand-700 disabled:pointer-events-none disabled:opacity-50"
+                className="primary-button mt-2 inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-white disabled:pointer-events-none disabled:opacity-50"
               >
                 保存（アクティビティに記録）
               </button>
