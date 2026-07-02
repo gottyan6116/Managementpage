@@ -2,11 +2,10 @@ import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import { ja } from "date-fns/locale";
 
 /**
- * デモ用の「今日」。スクリーンショットが 2025/05/16 基準のため、
- * 残り日数ラベルを再現できるよう固定する。
+ * デモ用の「今日」。CEO確認済みの現在日付に合わせる。
  * フェーズ2で実データに切り替える際は new Date() に置き換える。
  */
-export const APP_TODAY = parseISO("2025-05-16");
+export const APP_TODAY = parseISO("2026-07-02");
 
 export function toDate(value: string | Date): Date {
   return typeof value === "string" ? parseISO(value) : value;

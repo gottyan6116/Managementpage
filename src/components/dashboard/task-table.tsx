@@ -26,18 +26,20 @@ const TABS: { key: TaskTab; label: string; count: number }[] = [
 export function TaskTable({
   limit,
   initialTab = "all",
+  projectId,
 }: {
   limit?: number;
   initialTab?: TaskTab;
+  projectId?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const [tab, setTabState] = useState<TaskTab>(initialTab);
 
-  const { data: tasks } = useTasks({ tab });
+  const { data: tasks } = useTasks({ tab, projectId });
   const { data: members } = useMembers();
   const { data: projects } = useProjects("all");
-  const toggle = useToggleTaskDone({ tab });
+  const toggle = useToggleTaskDone({ tab, projectId });
 
   const memberMap = useMemo(
     () => new Map(members?.map((m) => [m.id, m])),

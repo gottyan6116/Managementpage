@@ -41,7 +41,7 @@ export function GanttFilterBar() {
       <FilterPill icon={FolderKanban} label="プロジェクト" value="すべて" />
       <FilterPill icon={User} label="担当者" value="すべて" />
       <FilterPill icon={SlidersHorizontal} label="ステータス" value="すべて" />
-      <FilterPill icon={Calendar} label="期間" value="2025/05/01 - 2025/05/31" />
+      <FilterPill icon={Calendar} label="期間" value="2026/06/01 - 2026/08/31" />
       <FilterPill icon={LayoutPanelTop} label="ビュー" chevron={false} />
       <button
         type="button"

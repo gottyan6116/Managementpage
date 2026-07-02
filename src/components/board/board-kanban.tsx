@@ -163,6 +163,38 @@ export function BoardKanban({ projectId }: { projectId?: string }) {
   }
 
   function updateDetails(id: string, patch: Parameters<typeof updateTask.mutate>[0]["patch"]) {
+    setGrouped((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).map(([col, items]) => [
+          col,
+          items.map((task) =>
+            task.id === id
+              ? {
+                  ...task,
+                  title: patch.title ?? task.title,
+                  priority: patch.priority ?? task.priority,
+                  progress: patch.progress ?? task.progress,
+                  startDate:
+                    patch.startDate === undefined ? task.startDate : patch.startDate,
+                  dueDate: patch.dueDate === undefined ? task.dueDate : patch.dueDate,
+                  description:
+                    patch.description === undefined
+                      ? task.description
+                      : patch.description,
+                  projectId:
+                    patch.projectId === undefined ? task.projectId : patch.projectId,
+                  assigneeIds:
+                    patch.assigneeId === undefined
+                      ? task.assigneeIds
+                      : patch.assigneeId
+                        ? [patch.assigneeId]
+                        : [],
+                }
+              : task,
+          ),
+        ]),
+      ),
+    );
     updateTask.mutate({ id, patch });
   }
 
@@ -269,6 +301,7 @@ function Column({
     progress?: number;
     startDate?: string | null;
     dueDate?: string | null;
+    description?: string | null;
     projectId?: string | null;
     assigneeId?: string | null;
   }) => void;
@@ -433,6 +466,7 @@ function SortableCard({
     progress?: number;
     startDate?: string | null;
     dueDate?: string | null;
+    description?: string | null;
     projectId?: string | null;
     assigneeId?: string | null;
   }) => void;
@@ -468,6 +502,7 @@ function SortableCard({
         dragHandle={
           <button
             ref={setActivatorNodeRef}
+            data-drag-handle
             type="button"
             aria-label={`${task.title}をドラッグして移動`}
             className="mt-0.5 inline-flex size-7 shrink-0 cursor-grab items-center justify-center rounded-lg text-ink-muted hover:bg-surface-muted active:cursor-grabbing"
@@ -510,6 +545,7 @@ function Card({
     progress?: number;
     startDate?: string | null;
     dueDate?: string | null;
+    description?: string | null;
     projectId?: string | null;
     assigneeId?: string | null;
   }) => void;
@@ -525,6 +561,7 @@ function Card({
     dueDate: task.dueDate ?? "",
     projectId: task.projectId ?? "",
     assigneeId: task.assigneeIds[0] ?? "",
+    description: task.description ?? "",
   });
 
   function resetDraftFromTask() {
@@ -536,6 +573,7 @@ function Card({
       dueDate: task.dueDate ?? "",
       projectId: task.projectId ?? "",
       assigneeId: task.assigneeIds[0] ?? "",
+      description: task.description ?? "",
     });
   }
 
@@ -546,15 +584,35 @@ function Card({
       progress: Number(draft.progress),
       startDate: draft.startDate || null,
       dueDate: draft.dueDate || null,
+      description: draft.description || null,
       projectId: (lockedProjectId ?? draft.projectId) || null,
       assigneeId: draft.assigneeId || null,
     });
   }
 
+  function shouldIgnoreToggle(target: EventTarget | null): boolean {
+    return target instanceof HTMLElement
+      ? Boolean(target.closest("button,input,select,textarea,[data-drag-handle]"))
+      : false;
+  }
+
   return (
     <div
+      role="button"
+      tabIndex={0}
+      onClick={(event) => {
+        if (shouldIgnoreToggle(event.target)) return;
+        if (!expanded) resetDraftFromTask();
+        onToggle?.();
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        if (!expanded) resetDraftFromTask();
+        onToggle?.();
+      }}
       className={cn(
-        "rounded-xl bg-surface border border-line p-3 shadow-sm transition-shadow",
+        "rounded-xl bg-surface border border-line p-3 shadow-sm transition-shadow cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-200",
         expanded && "shadow-card ring-1 ring-brand-100",
         dragging && "shadow-pop rotate-2",
       )}
@@ -576,8 +634,7 @@ function Card({
           <span className="block text-sm font-medium text-ink leading-snug">
             {task.title}
           </span>
-          <span className="mt-1 flex items-center gap-1 text-[11px] text-ink-muted">
-            詳細
+          <span className="mt-1 flex items-center gap-1 text-[11px] text-ink-muted" aria-hidden="true">
             <ChevronDown
               className={cn(
                 "size-3 transition-transform",
@@ -685,6 +742,18 @@ function Card({
                   </option>
                 ))}
               </select>
+            </label>
+            <label className="text-[11px] font-semibold text-ink-soft">
+              自由記入
+              <textarea
+                value={draft.description}
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, description: e.target.value }))
+                }
+                rows={4}
+                placeholder="背景、補足、次に確認することなどを自由に記入"
+                className="mt-1 w-full resize-none rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-brand-300"
+              />
             </label>
           </div>
           <div className="mt-3 flex items-center justify-between">

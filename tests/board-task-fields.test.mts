@@ -50,3 +50,11 @@ test("normalizeBoardTaskPatch keeps an existing title when input is blank", () =
     },
   );
 });
+
+test("normalizeBoardTaskPatch keeps free-form details as nullable text", () => {
+  assert.equal(
+    normalizeBoardTaskPatch({ description: "  追加メモ  " }).description,
+    "追加メモ",
+  );
+  assert.equal(normalizeBoardTaskPatch({ description: "   " }).description, null);
+});

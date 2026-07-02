@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Eye, Pencil } from "lucide-react";
+import { ArrowLeft, Check, Eye, ListPlus, Pencil } from "lucide-react";
 import { Markdown } from "@/components/shared/markdown";
-import { useDocument, useProjects, useUpdateDocument } from "@/lib/queries/hooks";
+import { useCreateTask, useDocument, useProjects, useUpdateDocument } from "@/lib/queries/hooks";
 import { formatDue } from "@/lib/date";
 import type { DocumentItem } from "@/types/domain";
 
@@ -29,6 +29,7 @@ export function DocumentDetail({ id }: { id: string }) {
 
 function Editor({ doc }: { doc: DocumentItem }) {
   const update = useUpdateDocument(doc.id);
+  const createTask = useCreateTask({ tab: "all", projectId: doc.projectId ?? undefined });
   const { data: projects } = useProjects("all");
   const [title, setTitle] = useState(doc.title);
   const [body, setBody] = useState(doc.body);
@@ -38,6 +39,17 @@ function Editor({ doc }: { doc: DocumentItem }) {
 
   function save() {
     update.mutate({ title, body, projectId });
+  }
+
+  const todoCandidates = body
+    .split("\n")
+    .map((line) => line.match(/^\s*-\s\[\s\]\s+(.+)/)?.[1]?.trim())
+    .filter((text): text is string => Boolean(text));
+
+  function createTasksFromTodos() {
+    for (const title of todoCandidates) {
+      createTask.mutate({ projectId, title });
+    }
   }
 
   return (
@@ -76,6 +88,15 @@ function Editor({ doc }: { doc: DocumentItem }) {
           className="inline-flex items-center gap-1.5 h-9 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed px-3.5 text-sm font-semibold text-white transition-colors shrink-0"
         >
           {dirty ? "保存" : (<><Check className="size-4" /> 保存済み</>)}
+        </button>
+        <button
+          type="button"
+          onClick={createTasksFromTodos}
+          disabled={todoCandidates.length === 0}
+          className="inline-flex items-center gap-1.5 h-9 rounded-lg border border-line bg-surface hover:bg-surface-muted disabled:opacity-50 disabled:cursor-not-allowed px-3 text-sm font-semibold text-ink-soft transition-colors shrink-0"
+        >
+          <ListPlus className="size-4" />
+          ToDoをタスク化
         </button>
       </div>
 

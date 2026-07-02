@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileText, Plus } from "lucide-react";
+import { FileText, ListPlus, Plus } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useCreateDocument, useDocuments, useProjects } from "@/lib/queries/hooks";
 import { formatDue } from "@/lib/date";
@@ -22,18 +22,34 @@ export function DocumentsView() {
     });
   }
 
+  function addMeetingDocument() {
+    createDoc.mutate({ template: "meeting", title: "新規議事録" }, {
+      onSuccess: (doc) => router.push(`/documents/${doc.id}`),
+    });
+  }
+
   return (
     <div className="rounded-2xl bg-surface border border-line shadow-card overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-line">
         <h2 className="text-base font-semibold text-ink">ドキュメント一覧</h2>
-        <button
-          type="button"
-          onClick={addDocument}
-          className="inline-flex items-center gap-1.5 h-9 rounded-lg bg-brand-600 hover:bg-brand-700 px-3.5 text-sm font-semibold text-white transition-colors"
-        >
-          <Plus className="size-4" />
-          新規ドキュメント
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={addMeetingDocument}
+            className="inline-flex items-center gap-1.5 h-9 rounded-lg border border-line px-3.5 text-sm font-semibold text-ink-soft hover:bg-surface-muted transition-colors"
+          >
+            <ListPlus className="size-4" />
+            議事録
+          </button>
+          <button
+            type="button"
+            onClick={addDocument}
+            className="inline-flex items-center gap-1.5 h-9 rounded-lg bg-brand-600 hover:bg-brand-700 px-3.5 text-sm font-semibold text-white transition-colors"
+          >
+            <Plus className="size-4" />
+            新規ドキュメント
+          </button>
+        </div>
       </div>
 
       {isLoading ? (

@@ -25,6 +25,7 @@ export interface Member {
 export interface Project {
   id: string;
   name: string;
+  clientId?: string | null;
   client: string | null;
   color: string;
   phase: string | null;
@@ -49,6 +50,7 @@ export interface Task {
   progress: number;
   startDate: string | null;
   dueDate: string | null;
+  description?: string | null;
   isMilestone: boolean;
   sortOrder: number;
   boardPosition: number;
@@ -104,6 +106,7 @@ export interface DashboardKpi {
 export interface DocumentItem {
   id: string;
   projectId: string | null;
+  template?: "standard" | "meeting";
   title: string;
   body: string; // Markdown
   updatedAt: string;
@@ -146,4 +149,62 @@ export interface GanttRow {
   color: string;
   bar: { start: string; due: string } | null;
   milestone?: { date: string; title: string };
+}
+
+export interface ClientContact {
+  id: string;
+  clientId: string;
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+}
+
+export interface ClientInteraction {
+  id: string;
+  clientId: string;
+  date: string;
+  channel: "meeting" | "email" | "call";
+  summary: string;
+  nextAction: string | null;
+}
+
+export interface ClientCompany {
+  id: string;
+  name: string;
+  industry: string;
+  ownerMemberId: string;
+  health: "good" | "watch" | "risk";
+  contacts: ClientContact[];
+  interactions: ClientInteraction[];
+}
+
+export interface TimeEntry {
+  id: string;
+  projectId: string;
+  taskId: string | null;
+  memberId: string;
+  date: string;
+  minutes: number;
+  note: string;
+  billable: boolean;
+}
+
+export interface BillingRecord {
+  id: string;
+  projectId: string;
+  contractAmount: number;
+  invoicedAmount: number;
+  directCost: number;
+  dueDate: string;
+  closingReminder: string;
+}
+
+export interface ProjectActivity {
+  id: string;
+  projectId: string;
+  actorMemberId: string;
+  createdAt: string;
+  type: "comment" | "task" | "document" | "billing" | "time";
+  body: string;
 }

@@ -15,6 +15,7 @@ import {
   useUpdateTaskSchedule,
 } from "@/lib/queries/hooks";
 import { APP_TODAY } from "@/lib/date";
+import { visibleGanttRows } from "@/lib/gantt-derived";
 import {
   GANTT_HEADER_HEIGHT,
   GANTT_ROW_HEIGHT,
@@ -79,8 +80,19 @@ export function GanttChart({
   const syncing = useRef(false);
   const dragStartX = useRef(0);
   const [drag, setDrag] = useState<DragState | null>(null);
+  const [manualCollapsedProjects, setManualCollapsedProjects] =
+    useState<Set<string> | null>(null);
 
   const memberMap = useMemo(() => new Map(members?.map((m) => [m.id, m])), [members]);
+  const defaultCollapsedProjects = useMemo(() => {
+    if (projectId || variant !== "full") return new Set<string>();
+    return new Set((rows ?? []).filter((row) => row.type === "project").map((row) => row.id));
+  }, [projectId, rows, variant]);
+  const collapsedProjects = manualCollapsedProjects ?? defaultCollapsedProjects;
+  const visibleRows = useMemo(
+    () => visibleGanttRows(rows ?? [], collapsedProjects),
+    [rows, collapsedProjects],
+  );
 
   const range = useMemo(() => {
     const dates = (rows ?? []).flatMap((r) => [r.bar?.start, r.bar?.due]);
@@ -103,11 +115,11 @@ export function GanttChart({
 
   const rowIndex = useMemo(() => {
     const m = new Map<string, number>();
-    rows?.forEach((r, i) => m.set(r.id, i));
+    visibleRows.forEach((r, i) => m.set(r.id, i));
     return m;
-  }, [rows]);
+  }, [visibleRows]);
 
-  const bodyHeight = (rows?.length ?? 0) * GANTT_ROW_HEIGHT;
+  const bodyHeight = visibleRows.length * GANTT_ROW_HEIGHT;
   const todayX = dateToX(APP_TODAY, range.start, dayWidth) + dayWidth / 2;
   const paneHeight = height ?? (variant === "preview" ? 260 : 560);
 
@@ -192,13 +204,23 @@ export function GanttChart({
           className="overflow-y-auto overflow-x-hidden no-scrollbar"
           style={{ height: paneHeight }}
         >
-          {rows?.map((row) => (
+          {visibleRows.map((row) => (
             <LeftRow
               key={row.id}
               row={row}
               showCols={showLeftCols}
               editable={editable}
               member={memberMap.get(row.assigneeIds[0] ?? "")}
+              collapsed={collapsedProjects.has(row.id)}
+              onToggleCollapse={() => {
+                if (row.type !== "project") return;
+                setManualCollapsedProjects((current) => {
+                  const next = new Set(current ?? collapsedProjects);
+                  if (next.has(row.id)) next.delete(row.id);
+                  else next.add(row.id);
+                  return next;
+                });
+              }}
               onRename={(title) => renameRow.mutate({ id: row.id, type: row.type, title })}
               onDelete={() => deleteRow.mutate({ id: row.id, type: row.type })}
             />
@@ -263,7 +285,7 @@ export function GanttChart({
 
             {/* 行の横罫 */}
             <div className="absolute inset-0 pointer-events-none">
-              {rows?.map((_, i) => (
+              {visibleRows.map((_, i) => (
                 <div key={i} className="border-b border-line/40" style={{ height: GANTT_ROW_HEIGHT }} />
               ))}
             </div>
@@ -285,8 +307,8 @@ export function GanttChart({
               height={Math.max(bodyHeight, paneHeight)}
             >
               {deps?.map((dep) => {
-                const from = rows?.find((r) => r.id === dep.predecessorId);
-                const to = rows?.find((r) => r.id === dep.successorId);
+                const from = visibleRows.find((r) => r.id === dep.predecessorId);
+                const to = visibleRows.find((r) => r.id === dep.successorId);
                 const fi = rowIndex.get(dep.predecessorId);
                 const ti = rowIndex.get(dep.successorId);
                 const fb = from ? effBar(from) : null;
@@ -309,7 +331,7 @@ export function GanttChart({
             </svg>
 
             {/* バー / マイルストーン */}
-            {rows?.map((row, i) => {
+            {visibleRows.map((row, i) => {
               const eff = effBar(row);
               return (
                 <BarRow
@@ -338,6 +360,8 @@ function LeftRow({
   showCols,
   editable,
   member,
+  collapsed,
+  onToggleCollapse,
   onRename,
   onDelete,
 }: {
@@ -345,6 +369,8 @@ function LeftRow({
   showCols: boolean;
   editable: boolean;
   member?: { id: string; name: string; color: string; avatarUrl: string | null };
+  collapsed: boolean;
+  onToggleCollapse: () => void;
   onRename: (title: string) => void;
   onDelete: () => void;
 }) {
@@ -366,11 +392,21 @@ function LeftRow({
     onDelete();
   }
 
+  function handleRowClick(event: React.MouseEvent<HTMLDivElement>) {
+    if (!isProject) return;
+    if (event.target instanceof HTMLElement) {
+      if (event.target.closest("button,input")) return;
+    }
+    onToggleCollapse();
+  }
+
   return (
     <div
+      onClick={handleRowClick}
       className={cn(
         "group relative flex items-center gap-2 px-4 border-b border-line/40",
         isProject ? "bg-surface-muted/40" : "bg-surface",
+        isProject && "cursor-pointer",
       )}
       style={{ height: GANTT_ROW_HEIGHT }}
     >
@@ -379,9 +415,18 @@ function LeftRow({
         style={{ paddingLeft: row.depth * 16 }}
       >
         {isProject ? (
-          <ChevronDown className="size-3.5 text-ink-muted shrink-0" />
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            aria-label={collapsed ? `${row.label}を展開` : `${row.label}を折りたたむ`}
+            className="inline-flex size-5 shrink-0 items-center justify-center rounded-md text-ink-muted hover:bg-surface hover:text-brand-600"
+          >
+            <ChevronDown
+              className={cn("size-3.5 transition-transform", collapsed && "-rotate-90")}
+            />
+          </button>
         ) : (
-          <span className="w-3.5 shrink-0" />
+          <span className="w-5 shrink-0" />
         )}
         <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
         {editing ? (

@@ -32,7 +32,7 @@ export function NotesView() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-12rem)] min-h-[560px] rounded-2xl border border-line bg-surface shadow-card overflow-hidden">
+    <div className="flex h-[calc(100vh-12rem)] min-h-[560px] min-w-[760px] rounded-2xl border border-line bg-surface shadow-card overflow-hidden">
       {/* ===== 列1: セクション ===== */}
       <div className="w-52 shrink-0 border-r border-line bg-surface-muted/30 flex flex-col">
         <button className="flex items-center gap-1.5 px-4 h-12 border-b border-line text-sm font-semibold text-ink hover:bg-surface-muted/60 transition-colors">

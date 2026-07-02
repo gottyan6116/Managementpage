@@ -9,22 +9,29 @@ import {
   normalizeBoardTaskPatch,
   type BoardTaskPatchInput,
 } from "@/lib/board-task-fields";
+import { deriveProjectBar } from "@/lib/gantt-derived";
 import type {
   ActionItem,
   AppNotification,
+  BillingRecord,
   BoardColumn,
+  ClientCompany,
   DashboardKpi,
   GanttRow,
   Member,
   Milestone,
   Project,
+  ProjectActivity,
   ProjectStatus,
   Task,
+  TimeEntry,
 } from "@/types/domain";
 import type { DocumentItem, FileItem, Note, NoteSection } from "@/types/domain";
 import {
   actions,
   boardColumns,
+  billingRecords,
+  clients,
   dashboardKpi,
   dependencies,
   documents,
@@ -36,7 +43,9 @@ import {
   notes,
   notifications,
   projects,
+  projectActivities,
   tasks,
+  timeEntries,
 } from "./data";
 
 const delay = () => new Promise((r) => setTimeout(r, 0));
@@ -66,6 +75,10 @@ export async function listProjects(tab: ProjectTab = "all"): Promise<Project[]> 
 }
 export function projectById(id: string | null): Project | undefined {
   return id ? projects.find((p) => p.id === id) : undefined;
+}
+export async function getProject(id: string): Promise<Project | null> {
+  await delay();
+  return projectById(id) ?? null;
 }
 
 /* ===== Tasks ===== */
@@ -123,12 +136,23 @@ export async function createTask(init: {
     progress: status === "done" ? 100 : 0,
     startDate: new Date().toISOString().slice(0, 10),
     dueDate: init.dueDate ?? null,
+    description: null,
     isMilestone: false,
     sortOrder: tasks.length + 1,
     boardPosition: tasks.filter((t) => t.boardColumnId === columnId).length,
     assigneeIds: [init.assigneeId || self().id],
   };
   tasks.push(task);
+  if (init.projectId) {
+    projectActivities.unshift({
+      id: `pa-${Date.now()}`,
+      projectId: init.projectId,
+      actorMemberId: self().id,
+      createdAt: new Date().toISOString(),
+      type: "task",
+      body: `Todoを作成: ${task.title}`,
+    });
+  }
   return task;
 }
 
@@ -175,6 +199,7 @@ export async function updateTaskDetails(
   if (next.progress !== undefined) t.progress = next.progress;
   if (next.startDate !== undefined) t.startDate = next.startDate;
   if (next.dueDate !== undefined) t.dueDate = next.dueDate;
+  if (next.description !== undefined) t.description = next.description;
   if (next.projectId !== undefined) t.projectId = next.projectId;
   if (next.assigneeIds !== undefined) t.assigneeIds = next.assigneeIds;
 }
@@ -258,8 +283,7 @@ export async function listGanttRows(projectId?: string): Promise<GanttRow[]> {
       progress: p.progress,
       status: p.status,
       color: p.color,
-      bar:
-        p.startDate && p.endDate ? { start: p.startDate, due: p.endDate } : null,
+      bar: deriveProjectBar(p, children),
     });
     for (const t of children) {
       rows.push({
@@ -328,6 +352,22 @@ export async function listNotifications(): Promise<AppNotification[]> {
   return notifications;
 }
 
+/* ===== Clients ===== */
+export async function listClients(): Promise<ClientCompany[]> {
+  await delay();
+  return clients;
+}
+
+export async function getClient(id: string): Promise<ClientCompany | null> {
+  await delay();
+  return clients.find((c) => c.id === id) ?? null;
+}
+
+export async function listClientProjects(clientId: string): Promise<Project[]> {
+  await delay();
+  return projects.filter((p) => p.clientId === clientId);
+}
+
 /* ===== グローバル検索 ===== */
 export interface SearchHit {
   id: string;
@@ -390,14 +430,19 @@ export async function updateDocument(
 }
 
 export async function createDocument(
-  init?: { title?: string; body?: string; projectId?: string | null },
+  init?: { title?: string; body?: string; projectId?: string | null; template?: "standard" | "meeting" },
 ): Promise<DocumentItem> {
   await delay();
   const doc: DocumentItem = {
     id: `doc-${Date.now()}`,
     projectId: init?.projectId ?? null,
+    template: init?.template ?? "standard",
     title: init?.title ?? "無題のドキュメント",
-    body: init?.body ?? "",
+    body:
+      init?.body ??
+      (init?.template === "meeting"
+        ? "# 議事録\n\n- 日時: \n- 参加者: \n\n## 決定事項\n- \n\n## ToDo\n- [ ] \n\n## 次回確認\n- "
+        : ""),
     updatedAt: new Date().toISOString().slice(0, 10),
   };
   documents.unshift(doc);
@@ -408,6 +453,97 @@ export async function createDocument(
 export async function listFiles(): Promise<FileItem[]> {
   await delay();
   return [...files].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function deleteFile(id: string): Promise<void> {
+  await delay();
+  const index = files.findIndex((file) => file.id === id);
+  if (index >= 0) files.splice(index, 1);
+}
+
+/* ===== Time tracking ===== */
+export async function listTimeEntries(projectId?: string): Promise<TimeEntry[]> {
+  await delay();
+  const list = projectId ? timeEntries.filter((e) => e.projectId === projectId) : timeEntries;
+  return [...list].sort((a, b) => b.date.localeCompare(a.date));
+}
+
+export async function createTimeEntry(init: {
+  projectId: string;
+  taskId?: string | null;
+  memberId?: string;
+  date: string;
+  minutes: number;
+  note: string;
+  billable: boolean;
+}): Promise<TimeEntry> {
+  await delay();
+  const entry: TimeEntry = {
+    id: `te-${Date.now()}`,
+    projectId: init.projectId,
+    taskId: init.taskId ?? null,
+    memberId: init.memberId ?? self().id,
+    date: init.date,
+    minutes: init.minutes,
+    note: init.note,
+    billable: init.billable,
+  };
+  timeEntries.unshift(entry);
+  projectActivities.unshift({
+    id: `pa-${Date.now()}`,
+    projectId: init.projectId,
+    actorMemberId: entry.memberId,
+    createdAt: new Date().toISOString(),
+    type: "time",
+    body: `${Math.round(entry.minutes / 60 * 10) / 10}h を記録: ${entry.note}`,
+  });
+  return entry;
+}
+
+/* ===== Billing ===== */
+export async function listBillingRecords(projectId?: string): Promise<BillingRecord[]> {
+  await delay();
+  const list = projectId
+    ? billingRecords.filter((r) => r.projectId === projectId)
+    : billingRecords;
+  return [...list].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+}
+
+export async function updateBillingRecord(
+  id: string,
+  patch: Partial<Pick<BillingRecord, "contractAmount" | "invoicedAmount" | "directCost" | "dueDate" | "closingReminder">>,
+): Promise<void> {
+  await delay();
+  const r = billingRecords.find((x) => x.id === id);
+  if (!r) return;
+  Object.assign(r, patch);
+}
+
+/* ===== Activities ===== */
+export async function listProjectActivities(projectId: string): Promise<ProjectActivity[]> {
+  await delay();
+  return projectActivities
+    .filter((a) => a.projectId === projectId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function createProjectActivity(init: {
+  projectId: string;
+  body: string;
+  type?: ProjectActivity["type"];
+  actorMemberId?: string;
+}): Promise<ProjectActivity> {
+  await delay();
+  const activity: ProjectActivity = {
+    id: `pa-${Date.now()}`,
+    projectId: init.projectId,
+    actorMemberId: init.actorMemberId ?? self().id,
+    createdAt: new Date().toISOString(),
+    type: init.type ?? "comment",
+    body: init.body,
+  };
+  projectActivities.unshift(activity);
+  return activity;
 }
 
 /* ===== Notes ===== */

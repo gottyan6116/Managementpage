@@ -7,6 +7,7 @@ export interface BoardTaskPatchInput {
   progress?: number;
   startDate?: string | null;
   dueDate?: string | null;
+  description?: string | null;
   projectId?: string | null;
   assigneeId?: string | null;
 }
@@ -17,6 +18,7 @@ export interface NormalizedBoardTaskPatch {
   progress?: number;
   startDate?: string | null;
   dueDate?: string | null;
+  description?: string | null;
   projectId?: string | null;
   assigneeIds?: string[];
 }
@@ -50,6 +52,10 @@ export function normalizeBoardTaskPatch(
 
   if (input.dueDate !== undefined) {
     patch.dueDate = input.dueDate?.trim() || null;
+  }
+
+  if (input.description !== undefined) {
+    patch.description = input.description?.trim() || null;
   }
 
   if (input.projectId !== undefined) {

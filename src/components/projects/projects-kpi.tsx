@@ -17,6 +17,7 @@ export function ProjectsKpiRow() {
         label="担当案件数"
         value={12}
         sub="件"
+        href="/projects"
         trend={{ value: "+2件", dir: "up", tone: "good" }}
         graph={<Sparkline data={series.projectsCountTrend} color="#2563EB" />}
       />
@@ -27,6 +28,7 @@ export function ProjectsKpiRow() {
         label="進行中"
         value={8}
         sub="全体の 66%"
+        href="/projects?tab=in_progress"
         graph={
           <Donut
             size={56}
@@ -46,6 +48,7 @@ export function ProjectsKpiRow() {
         label="要注意"
         value={2}
         sub="件"
+        href="/projects?tab=in_progress"
         trend={{ value: "-1件", dir: "down", tone: "good" }}
         graph={<MiniBarChart data={series.atRiskTrend} color="#F59E0B" />}
       />
@@ -56,6 +59,7 @@ export function ProjectsKpiRow() {
         label="今月完了予定"
         value={3}
         sub="件"
+        href="/gantt"
         trend={{ value: "+1件", dir: "up", tone: "good" }}
         graph={<MiniBarChart data={series.completeSoonTrend} color="#F59E0B" />}
       />

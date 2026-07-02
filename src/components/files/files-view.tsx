@@ -9,12 +9,12 @@ import {
   FileText,
   LayoutGrid,
   List,
-  MoreVertical,
   Presentation,
+  Trash2,
   UploadCloud,
   type LucideIcon,
 } from "lucide-react";
-import { useFiles, useProjects } from "@/lib/queries/hooks";
+import { useDeleteFile, useFiles, useProjects } from "@/lib/queries/hooks";
 import { formatDue } from "@/lib/date";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +36,7 @@ function iconFor(mime: string): { Icon: LucideIcon; color: string } {
 export function FilesView() {
   const { data: files } = useFiles();
   const { data: projects } = useProjects("all");
+  const deleteFile = useDeleteFile();
   const [view, setView] = useState<"grid" | "list">("grid");
 
   const projectMap = useMemo(() => new Map(projects?.map((p) => [p.id, p])), [projects]);
@@ -97,10 +98,13 @@ export function FilesView() {
                     <Icon className="size-5" />
                   </span>
                   <button
-                    aria-label="メニュー"
-                    className="inline-flex items-center justify-center size-7 rounded-lg text-ink-muted opacity-0 group-hover:opacity-100 hover:bg-surface-muted transition"
+                    type="button"
+                    aria-label={`${f.name}を削除`}
+                    title="削除"
+                    onClick={() => deleteFile.mutate(f.id)}
+                    className="inline-flex items-center justify-center size-7 rounded-lg text-ink-muted opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition"
                   >
-                    <MoreVertical className="size-4" />
+                    <Trash2 className="size-4" />
                   </button>
                 </div>
                 <p className="mt-3 text-sm font-medium text-ink truncate" title={f.name}>
@@ -148,12 +152,24 @@ export function FilesView() {
                     <td className="py-3 text-ink-soft tabular-nums">{formatBytes(f.sizeBytes)}</td>
                     <td className="py-3 text-ink-soft tabular-nums">{formatDue(f.createdAt)}</td>
                     <td className="py-3 pr-5">
-                      <button
-                        aria-label="ダウンロード"
-                        className="inline-flex items-center justify-center size-7 rounded-lg text-ink-muted hover:bg-surface-muted transition-colors"
-                      >
-                        <Download className="size-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          type="button"
+                          aria-label="ダウンロード"
+                          className="inline-flex items-center justify-center size-7 rounded-lg text-ink-muted hover:bg-surface-muted transition-colors"
+                        >
+                          <Download className="size-4" />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`${f.name}を削除`}
+                          title="削除"
+                          onClick={() => deleteFile.mutate(f.id)}
+                          className="inline-flex items-center justify-center size-7 rounded-lg text-ink-muted hover:bg-red-50 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

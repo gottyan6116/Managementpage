@@ -92,6 +92,7 @@ export function GanttBoard() {
       </div>
 
       <GanttChart
+        key={selectedProject ?? "all"}
         variant="full"
         projectId={selectedProject}
         editable

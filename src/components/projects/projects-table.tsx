@@ -1,13 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ArrowUpDown, ChevronDown, MoreVertical, SlidersHorizontal } from "lucide-react";
-import { SectionCard } from "@/components/shared/section-card";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  SlidersHorizontal,
+  StickyNote,
+  Users,
+} from "lucide-react";
+import { GanttChart } from "@/components/gantt/gantt-chart";
 import { AvatarGroup } from "@/components/shared/avatar";
 import { PhaseBadge, PriorityBadge, StatusBadge } from "@/components/shared/badges";
-import { ProgressBar } from "@/components/shared/progress-bar";
 import { DueText } from "@/components/shared/due-text";
+import { ProgressBar } from "@/components/shared/progress-bar";
+import { SectionCard } from "@/components/shared/section-card";
 import { useMembers, useProjects } from "@/lib/queries/hooks";
 import type { ProjectTab } from "@/lib/repositories";
 import { cn } from "@/lib/utils";
@@ -27,6 +34,8 @@ export function ProjectsTable({
   const router = useRouter();
   const pathname = usePathname();
   const [tab, setTabState] = useState<ProjectTab>(initialTab);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [memos, setMemos] = useState<Record<string, string>>({});
 
   const { data: projects } = useProjects(tab);
   const { data: members } = useMembers();
@@ -87,7 +96,6 @@ export function ProjectsTable({
               <th className="py-2.5 font-medium">フェーズ</th>
               <th className="py-2.5 font-medium w-40">進捗</th>
               <th className="py-2.5 font-medium">次回期限</th>
-              <th className="py-2.5 font-medium">担当者</th>
               <th className="py-2.5 font-medium">優先度</th>
               <th className="py-2.5 font-medium">ステータス</th>
               <th className="py-2.5 pr-6" />
@@ -99,49 +107,104 @@ export function ProjectsTable({
                 .map((id) => memberMap.get(id))
                 .filter((m): m is NonNullable<typeof m> => Boolean(m));
               const done = p.status === "done";
+              const expanded = expandedId === p.id;
               return (
-                <tr
-                  key={p.id}
-                  className="border-t border-line hover:bg-surface-muted/60 transition-colors cursor-pointer"
-                >
-                  <td className="py-4 pl-6 pr-4">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span
-                        className="size-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: p.color }}
-                      />
-                      <div className="min-w-0">
-                        <p className="font-medium text-ink truncate">{p.name}</p>
-                        <p className="text-xs text-ink-muted truncate">{p.client}</p>
+                <Fragment key={p.id}>
+                  <tr
+                    onClick={() => setExpandedId(expanded ? null : p.id)}
+                    className={cn(
+                      "border-t border-line hover:bg-surface-muted/60 transition-colors cursor-pointer",
+                      expanded && "bg-brand-50/40",
+                    )}
+                  >
+                    <td className="py-4 pl-6 pr-4">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span
+                          className="size-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: p.color }}
+                        />
+                        <div className="min-w-0">
+                          <p className="font-medium text-ink truncate">{p.name}</p>
+                          <p className="text-xs text-ink-muted truncate">{p.client}</p>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="py-4 pr-4">{p.phase && <PhaseBadge label={p.phase} />}</td>
-                  <td className="py-4 pr-4 w-40">
-                    <ProgressBar value={p.progress} color={p.color} />
-                  </td>
-                  <td className="py-4 pr-4">
-                    {p.nextDue && <DueText date={p.nextDue} done={done} />}
-                  </td>
-                  <td className="py-4 pr-4">
-                    {assignees.length > 0 && <AvatarGroup members={assignees} max={3} />}
-                  </td>
-                  <td className="py-4 pr-4">
-                    <PriorityBadge priority={p.priority} />
-                  </td>
-                  <td className="py-4 pr-4">
-                    <StatusBadge status={p.status} />
-                  </td>
-                  <td className="py-4 pr-6">
-                    <button
-                      type="button"
-                      aria-label="メニュー"
-                      className="inline-flex items-center justify-center size-7 rounded-lg text-ink-muted hover:bg-surface-muted transition-colors"
-                    >
-                      <MoreVertical className="size-4" />
-                    </button>
-                  </td>
-                </tr>
+                    </td>
+                    <td className="py-4 pr-4">{p.phase && <PhaseBadge label={p.phase} />}</td>
+                    <td className="py-4 pr-4 w-40">
+                      <ProgressBar value={p.progress} color={p.color} />
+                    </td>
+                    <td className="py-4 pr-4">
+                      {p.nextDue && <DueText date={p.nextDue} done={done} />}
+                    </td>
+                    <td className="py-4 pr-4">
+                      <PriorityBadge priority={p.priority} />
+                    </td>
+                    <td className="py-4 pr-4">
+                      <StatusBadge status={p.status} />
+                    </td>
+                    <td className="py-4 pr-6 text-right">
+                      <ChevronDown
+                        className={cn(
+                          "ml-auto size-4 text-ink-muted transition-transform",
+                          expanded && "rotate-180 text-brand-600",
+                        )}
+                      />
+                    </td>
+                  </tr>
+                  {expanded && (
+                    <tr className="border-t border-line bg-surface">
+                      <td colSpan={7} className="px-6 py-5">
+                        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-ink">案件ガント</p>
+                            <p className="mb-3 text-xs text-ink-muted">
+                              行をもう一度クリックすると閉じます。バー編集はガント画面で行えます。
+                            </p>
+                            <GanttChart variant="preview" projectId={p.id} height={260} />
+                          </div>
+
+                          <div className="space-y-4">
+                            <section className="rounded-xl border border-line bg-surface-muted/40 p-4">
+                              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-ink">
+                                <StickyNote className="size-4 text-brand-600" />
+                                案件メモ
+                              </div>
+                              <textarea
+                                value={memos[p.id] ?? ""}
+                                onChange={(e) =>
+                                  setMemos((current) => ({
+                                    ...current,
+                                    [p.id]: e.target.value,
+                                  }))
+                                }
+                                rows={6}
+                                placeholder="次回確認、懸念点、顧客からの依頼など"
+                                className="w-full resize-none rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-brand-300"
+                              />
+                            </section>
+
+                            <section className="rounded-xl border border-line bg-surface-muted/40 p-4">
+                              <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink">
+                                <Users className="size-4 text-brand-600" />
+                                関係者リスト
+                              </div>
+                              {assignees.length > 0 ? (
+                                <div className="flex items-center justify-between gap-3">
+                                  <AvatarGroup members={assignees} max={5} />
+                                  <span className="text-xs text-ink-muted">
+                                    {assignees.length}名
+                                  </span>
+                                </div>
+                              ) : (
+                                <p className="text-sm text-ink-muted">未設定</p>
+                              )}
+                            </section>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               );
             })}
           </tbody>

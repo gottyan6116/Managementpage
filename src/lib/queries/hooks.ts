@@ -6,12 +6,23 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import * as repo from "@/lib/repositories";
-import type { ActionItem, GanttRow, Note, Priority, Task } from "@/types/domain";
+import type {
+  ActionItem,
+  BillingRecord,
+  FileItem,
+  GanttRow,
+  Note,
+  Priority,
+  ProjectActivity,
+  Task,
+  TimeEntry,
+} from "@/types/domain";
 
 /** クエリキー (docs/05 §2)。データ取得は必ずこのフック経由。 */
 export const qk = {
   members: ["members"] as const,
   projects: (tab: repo.ProjectTab) => ["projects", tab] as const,
+  project: (id: string) => ["project", id] as const,
   tasks: (params: repo.TaskListParams) => ["tasks", params] as const,
   board: ["board"] as const,
   boardColumns: ["board-columns"] as const,
@@ -24,12 +35,18 @@ export const qk = {
   statusDist: ["status-distribution"] as const,
   actions: ["actions"] as const,
   notifications: ["notifications"] as const,
+  clients: ["clients"] as const,
+  client: (id: string) => ["client", id] as const,
+  clientProjects: (id: string) => ["client-projects", id] as const,
   documents: ["documents"] as const,
   document: (id: string) => ["document", id] as const,
   search: (q: string) => ["search", q] as const,
   files: ["files"] as const,
   notes: ["notes"] as const,
   noteSections: ["note-sections"] as const,
+  timeEntries: (projectId?: string) => ["time-entries", projectId ?? "all"] as const,
+  billing: (projectId?: string) => ["billing", projectId ?? "all"] as const,
+  activities: (projectId: string) => ["project-activities", projectId] as const,
 };
 
 export function useMembers() {
@@ -38,6 +55,10 @@ export function useMembers() {
 
 export function useProjects(tab: repo.ProjectTab = "all") {
   return useQuery({ queryKey: qk.projects(tab), queryFn: () => repo.listProjects(tab) });
+}
+
+export function useProject(id: string) {
+  return useQuery({ queryKey: qk.project(id), queryFn: () => repo.getProject(id) });
 }
 
 export function useTasks(params: repo.TaskListParams = {}) {
@@ -84,6 +105,18 @@ export function useNotifications() {
   return useQuery({ queryKey: qk.notifications, queryFn: repo.listNotifications });
 }
 
+export function useClients() {
+  return useQuery({ queryKey: qk.clients, queryFn: repo.listClients });
+}
+
+export function useClient(id: string) {
+  return useQuery({ queryKey: qk.client(id), queryFn: () => repo.getClient(id) });
+}
+
+export function useClientProjects(id: string) {
+  return useQuery({ queryKey: qk.clientProjects(id), queryFn: () => repo.listClientProjects(id) });
+}
+
 export function useDocuments() {
   return useQuery({ queryKey: qk.documents, queryFn: repo.listDocuments });
 }
@@ -107,7 +140,12 @@ export function useUpdateDocument(id: string) {
 export function useCreateDocument() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (init?: { title?: string; body?: string; projectId?: string | null }) =>
+    mutationFn: (init?: {
+      title?: string;
+      body?: string;
+      projectId?: string | null;
+      template?: "standard" | "meeting";
+    }) =>
       repo.createDocument(init),
     onSettled: () => qc.invalidateQueries({ queryKey: qk.documents }),
   });
@@ -124,6 +162,26 @@ export function useSearch(query: string) {
 export function useFiles() {
   return useQuery({ queryKey: qk.files, queryFn: repo.listFiles });
 }
+
+export function useDeleteFile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => repo.deleteFile(id),
+    onMutate: async (id: string) => {
+      await qc.cancelQueries({ queryKey: qk.files });
+      const prev = qc.getQueryData<FileItem[] | undefined>(qk.files);
+      qc.setQueryData<FileItem[]>(qk.files, (old) =>
+        old?.filter((file) => file.id !== id) ?? [],
+      );
+      return { prev };
+    },
+    onError: (_error, _id, ctx) => {
+      if (ctx?.prev) qc.setQueryData(qk.files, ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: qk.files }),
+  });
+}
+
 
 export function useNotes() {
   return useQuery({ queryKey: qk.notes, queryFn: repo.listNotes });
@@ -263,13 +321,15 @@ export function useCreateTask(params: repo.TaskListParams = {}) {
       columnId?: string;
       priority?: Priority;
       assigneeId?: string | null;
-    }) => repo.createTask(init),
+    }) =>
+      repo.createTask(init),
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: qk.tasks(params) });
       qc.invalidateQueries({ queryKey: qk.board });
       qc.invalidateQueries({ queryKey: qk.kpi });
       qc.invalidateQueries({ queryKey: ["gantt"] });
+      qc.invalidateQueries({ queryKey: ["project-activities"] });
     },
   });
 }
@@ -284,12 +344,94 @@ export function useUpdateTaskDetails(params: repo.TaskListParams = {}) {
       id: string;
       patch: repo.TaskDetailsPatch;
     }) => repo.updateTaskDetails(id, patch),
+    onMutate: async ({ id, patch }) => {
+      const taskKey = qk.tasks(params);
+      await Promise.all([
+        qc.cancelQueries({ queryKey: ["tasks"] }),
+        qc.cancelQueries({ queryKey: taskKey }),
+        qc.cancelQueries({ queryKey: qk.board }),
+        qc.cancelQueries({ queryKey: ["gantt"] }),
+      ]);
+
+      const prevTasks = qc.getQueryData<Task[] | undefined>(taskKey);
+      const prevAllTasks = qc.getQueryData<Task[] | undefined>(["tasks"]);
+      const prevBoard = qc.getQueryData<Record<string, Task[]> | undefined>(qk.board);
+      const prevGantt = qc.getQueriesData<GanttRow[]>({ queryKey: ["gantt"] });
+      const normalizedPatch: Partial<Task> = {
+        ...patch,
+        title: patch.title?.trim() || undefined,
+        description:
+          patch.description === undefined ? undefined : patch.description?.trim() || null,
+      };
+
+      const applyPatch = (task: Task): Task =>
+        task.id === id
+          ? {
+              ...task,
+              ...normalizedPatch,
+              title: normalizedPatch.title ?? task.title,
+              projectId: normalizedPatch.projectId ?? task.projectId,
+              assigneeIds: normalizedPatch.assigneeIds ?? task.assigneeIds,
+              description:
+                normalizedPatch.description !== undefined
+                  ? normalizedPatch.description
+                  : task.description,
+            }
+          : task;
+
+      qc.setQueryData<Task[]>(taskKey, (old) => old?.map(applyPatch) ?? old);
+      qc.setQueryData<Task[]>(["tasks"], (old) => old?.map(applyPatch) ?? old);
+      qc.setQueryData<Record<string, Task[]>>(qk.board, (old) => {
+        if (!old) return old;
+        return Object.fromEntries(
+          Object.entries(old).map(([columnId, tasks]) => [
+            columnId,
+            tasks.map(applyPatch),
+          ]),
+        );
+      });
+      prevGantt.forEach(([key, rows]) => {
+        if (!rows) return;
+        qc.setQueryData<GanttRow[]>(
+          key,
+          rows.map((row) =>
+            row.type === "task" && row.id === id
+              ? {
+                  ...row,
+                  label: normalizedPatch.title ?? row.label,
+                  progress: normalizedPatch.progress ?? row.progress,
+                  status: normalizedPatch.status ?? row.status,
+                  assigneeIds: normalizedPatch.assigneeIds ?? row.assigneeIds,
+                  bar:
+                    normalizedPatch.startDate !== undefined ||
+                    normalizedPatch.dueDate !== undefined
+                      ? {
+                          start: normalizedPatch.startDate ?? row.bar?.start ?? "",
+                          due: normalizedPatch.dueDate ?? row.bar?.due ?? "",
+                        }
+                      : row.bar,
+                }
+              : row,
+          ),
+        );
+      });
+
+      return { prevTasks, prevAllTasks, prevBoard, prevGantt, taskKey };
+    },
+    onError: (_error, _variables, ctx) => {
+      if (!ctx) return;
+      qc.setQueryData(ctx.taskKey, ctx.prevTasks);
+      qc.setQueryData(["tasks"], ctx.prevAllTasks);
+      qc.setQueryData(qk.board, ctx.prevBoard);
+      ctx.prevGantt.forEach(([key, data]) => qc.setQueryData(key, data));
+    },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: qk.tasks(params) });
       qc.invalidateQueries({ queryKey: qk.board });
       qc.invalidateQueries({ queryKey: qk.kpi });
       qc.invalidateQueries({ queryKey: ["gantt"] });
+      qc.invalidateQueries({ queryKey: ["project-activities"] });
     },
   });
 }
@@ -304,6 +446,7 @@ export function useDeleteTask(params: repo.TaskListParams = {}) {
       qc.invalidateQueries({ queryKey: qk.board });
       qc.invalidateQueries({ queryKey: qk.kpi });
       qc.invalidateQueries({ queryKey: ["gantt"] });
+      qc.invalidateQueries({ queryKey: ["project-activities"] });
     },
   });
 }
@@ -374,5 +517,114 @@ export function useMoveTask() {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: qk.board });
     },
+  });
+}
+
+export function useTimeEntries(projectId?: string) {
+  return useQuery({
+    queryKey: qk.timeEntries(projectId),
+    queryFn: () => repo.listTimeEntries(projectId),
+  });
+}
+
+export function useCreateTimeEntry(projectId?: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (init: {
+      projectId: string;
+      taskId?: string | null;
+      memberId?: string;
+      date: string;
+      minutes: number;
+      note: string;
+      billable: boolean;
+    }) => repo.createTimeEntry(init),
+    onMutate: async (init) => {
+      const key = qk.timeEntries(projectId);
+      await qc.cancelQueries({ queryKey: key });
+      const prev = qc.getQueryData<TimeEntry[]>(key);
+      qc.setQueryData<TimeEntry[]>(key, (old) => [
+        {
+          id: `temp-${Date.now()}`,
+          projectId: init.projectId,
+          taskId: init.taskId ?? null,
+          memberId: init.memberId ?? "m-yamada",
+          date: init.date,
+          minutes: init.minutes,
+          note: init.note,
+          billable: init.billable,
+        },
+        ...(old ?? []),
+      ]);
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(qk.timeEntries(projectId), ctx.prev);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ["time-entries"] });
+      qc.invalidateQueries({ queryKey: ["project-activities"] });
+    },
+  });
+}
+
+export function useBillingRecords(projectId?: string) {
+  return useQuery({
+    queryKey: qk.billing(projectId),
+    queryFn: () => repo.listBillingRecords(projectId),
+  });
+}
+
+export function useUpdateBillingRecord(projectId?: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: Partial<
+        Pick<
+          BillingRecord,
+          "contractAmount" | "invoicedAmount" | "directCost" | "dueDate" | "closingReminder"
+        >
+      >;
+    }) => repo.updateBillingRecord(id, patch),
+    onSettled: () => qc.invalidateQueries({ queryKey: qk.billing(projectId) }),
+  });
+}
+
+export function useProjectActivities(projectId: string) {
+  return useQuery({
+    queryKey: qk.activities(projectId),
+    queryFn: () => repo.listProjectActivities(projectId),
+  });
+}
+
+export function useCreateProjectActivity(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: string) => repo.createProjectActivity({ projectId, body }),
+    onMutate: async (body) => {
+      const key = qk.activities(projectId);
+      await qc.cancelQueries({ queryKey: key });
+      const prev = qc.getQueryData<ProjectActivity[]>(key);
+      qc.setQueryData<ProjectActivity[]>(key, (old) => [
+        {
+          id: `temp-${Date.now()}`,
+          projectId,
+          actorMemberId: "m-yamada",
+          createdAt: new Date().toISOString(),
+          type: "comment",
+          body,
+        },
+        ...(old ?? []),
+      ]);
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(qk.activities(projectId), ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: qk.activities(projectId) }),
   });
 }

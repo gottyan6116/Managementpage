@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Hexagon } from "lucide-react";
-import { NAV_ITEMS } from "./nav";
+import { NAV_SECTIONS } from "./nav";
 import {
   SIDEBAR_WIDTH_COLLAPSED,
   useUiStore,
@@ -105,30 +105,41 @@ export function Sidebar() {
           </div>
 
           {/* メニュー */}
-          <nav className="relative flex-1 px-3 space-y-1 overflow-y-auto">
-            {NAV_ITEMS.map((item) => {
-              const active =
-                pathname === item.href || pathname.startsWith(item.href + "/");
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  title={collapsed ? item.label : undefined}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                    collapsed && "justify-center px-0",
-                    active
-                      ? "bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)] shadow-sm"
-                      : "text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)]",
-                  )}
-                >
-                  <Icon className="size-5 shrink-0" />
-                  {!collapsed && <span className="truncate">{item.label}</span>}
-                </Link>
-              );
-            })}
+          <nav className="relative flex-1 px-3 overflow-y-auto">
+            {NAV_SECTIONS.map((section) => (
+              <div key={section.label} className="mb-4">
+                {!collapsed && (
+                  <p className="px-3 pb-1.5 text-[10px] font-bold tracking-[0.12em] text-[color:var(--sidebar-text-dim)]">
+                    {section.label}
+                  </p>
+                )}
+                <div className="space-y-1">
+                  {section.items.map((item) => {
+                    const active =
+                      pathname === item.href || pathname.startsWith(item.href + "/");
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        title={collapsed ? item.label : undefined}
+                        aria-current={active ? "page" : undefined}
+                        className={cn(
+                          "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                          collapsed && "justify-center px-0",
+                          active
+                            ? "bg-[color:var(--sidebar-active-bg)] text-[color:var(--sidebar-active-text)] shadow-sm"
+                            : "text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-hover-bg)]",
+                        )}
+                      >
+                        <Icon className="size-5 shrink-0" />
+                        {!collapsed && <span className="truncate">{item.label}</span>}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
           {/* プロフィール */}
