@@ -6,11 +6,12 @@ interface UiState {
   toggleSidebar: () => void;
   setSidebarCollapsed: (v: boolean) => void;
 
+  /** モバイル (lg 未満) ではオフキャンバスドロワーとして開閉する */
+  mobileSidebarOpen: boolean;
+  setMobileSidebarOpen: (v: boolean) => void;
+
   sidebarWidth: number;
   setSidebarWidth: (v: number) => void;
-
-  commandPaletteOpen: boolean;
-  setCommandPaletteOpen: (v: boolean) => void;
 
   ganttDayWidth: number;
   setGanttDayWidth: (v: number) => void;
@@ -31,14 +32,14 @@ export const useUiStore = create<UiState>((set) => ({
     set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
   setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
 
+  mobileSidebarOpen: false,
+  setMobileSidebarOpen: (v) => set({ mobileSidebarOpen: v }),
+
   sidebarWidth: SIDEBAR_WIDTH_DEFAULT,
   setSidebarWidth: (v) =>
     set({
       sidebarWidth: Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, v)),
     }),
-
-  commandPaletteOpen: false,
-  setCommandPaletteOpen: (v) => set({ commandPaletteOpen: v }),
 
   ganttDayWidth: GANTT_DAY_WIDTH_DEFAULT,
   setGanttDayWidth: (v) =>

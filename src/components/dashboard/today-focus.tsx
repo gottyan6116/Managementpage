@@ -15,13 +15,25 @@ export function TodayFocusCard() {
 
   const projectMap = useMemo(() => new Map(projects?.map((p) => [p.id, p])), [projects]);
 
-  const openTasks = useMemo(
-    () =>
-      (tasks ?? [])
-        .filter((t) => t.status !== "done" && t.dueDate)
-        .sort((a, b) => (a.dueDate ?? "").localeCompare(b.dueDate ?? "")),
-    [tasks],
-  );
+  // 「最優先」の選定: 期限超過 > 今日期限 > 優先度「高」かつ3日以内 > 期限が近い順
+  const openTasks = useMemo(() => {
+    const rank = (t: { dueDate: string | null; priority: string }) => {
+      const d = t.dueDate ? daysUntil(t.dueDate) : Number.POSITIVE_INFINITY;
+      if (d < 0) return 0;
+      if (d === 0) return 1;
+      if (t.priority === "high" && d <= 3) return 2;
+      return 3;
+    };
+    const priorityOrder = { high: 0, medium: 1, low: 2 } as const;
+    return (tasks ?? [])
+      .filter((t) => t.status !== "done" && t.dueDate)
+      .sort(
+        (a, b) =>
+          rank(a) - rank(b) ||
+          (a.dueDate ?? "").localeCompare(b.dueDate ?? "") ||
+          priorityOrder[a.priority] - priorityOrder[b.priority],
+      );
+  }, [tasks]);
   const focus = openTasks[0] ?? null;
   const next = openTasks.slice(1, 5);
 
@@ -71,7 +83,7 @@ export function TodayFocusCard() {
       <div className="mt-4 flex items-center gap-2">
         <button
           type="button"
-          onClick={() => router.push("/board")}
+          onClick={() => router.push(`/board?task=${focus.id}`)}
           className="primary-button inline-flex items-center gap-1.5 h-9 rounded-lg px-3.5 text-sm font-semibold text-white transition-colors"
         >
           <Play className="size-3.5" />

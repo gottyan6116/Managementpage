@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   DndContext,
   DragOverlay,
@@ -46,8 +47,9 @@ import { PRIORITY_STYLE } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import type { Member, Priority, Project, Task } from "@/types/domain";
 
+/* 「同じ意味には同じ色」: 完了=green-600 / 進行中=blue-600 / 未着手=slate-500 */
 const COLUMN_DOT: Record<string, string> = {
-  "col-todo": "#94A3B8",
+  "col-todo": "#64748B",
   "col-doing": "#2563EB",
   "col-done": "#16A34A",
 };
@@ -83,6 +85,23 @@ export function BoardKanban({ projectId }: { projectId?: string }) {
   const [grouped, setGrouped] = useState<Grouped>(buildGrouped);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // ホームの「作業を開く」(?task=) から遷移した場合、該当カードを展開して中央へスクロール
+  const searchParams = useSearchParams();
+  const focusTaskId = searchParams.get("task");
+  const focusedOnce = useRef(false);
+  useEffect(() => {
+    if (focusedOnce.current || !focusTaskId || !tasks) return;
+    if (!tasks.some((t) => t.id === focusTaskId)) return;
+    focusedOnce.current = true;
+    const raf = requestAnimationFrame(() => {
+      setExpandedId(focusTaskId);
+      document
+        .getElementById(`board-card-${focusTaskId}`)
+        ?.scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [focusTaskId, tasks]);
 
   // クエリ結果が更新されたらローカル状態を再同期 (effect ではなくレンダー中に調整)
   const [syncedSrc, setSyncedSrc] = useState<{ c: typeof columns; t: typeof tasks }>({
@@ -485,6 +504,7 @@ function SortableCard({
     useSortable({ id: task.id });
   return (
     <div
+      id={`board-card-${task.id}`}
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(isDragging && "opacity-40")}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import {
   Briefcase,
@@ -26,6 +26,12 @@ export function SearchBox() {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+  // OS 依存のショートカット表記。SSR では Ctrl K、クライアントで OS 判定
+  const kbdLabel = useSyncExternalStore(
+    () => () => {},
+    () => (/Mac|iPhone|iPad/i.test(navigator.userAgent) ? "⌘K" : "Ctrl K"),
+    () => "Ctrl K",
+  );
   const inputRef = useRef<HTMLInputElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
 
@@ -94,7 +100,7 @@ export function SearchBox() {
           className="flex-1 min-w-0 bg-transparent text-sm text-ink placeholder:text-ink-muted outline-none"
         />
         <kbd className="hidden sm:inline-flex items-center rounded-md border border-line bg-surface px-1.5 py-0.5 text-[11px] font-medium text-ink-muted">
-          ⌘K
+          {kbdLabel}
         </kbd>
       </div>
 

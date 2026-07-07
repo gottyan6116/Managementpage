@@ -1,8 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { Check, ChevronDown, ChevronUp, SlidersHorizontal, Settings2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  SlidersHorizontal,
+  Settings2,
+  X,
+} from "lucide-react";
 import { SectionCard } from "@/components/shared/section-card";
 import { Avatar } from "@/components/shared/avatar";
 import { PriorityBadge, StatusBadge } from "@/components/shared/badges";
@@ -33,6 +40,17 @@ const PRIORITY_OPTIONS: { key: Priority | "all"; label: string }[] = [
   { key: "low", label: "低のみ" },
 ];
 
+type DueFilter = "today" | "week" | null;
+
+const DUE_FILTER_LABEL: Record<Exclude<DueFilter, null>, string> = {
+  today: "期限: 今日",
+  week: "期限: 今週",
+};
+
+function isTaskTab(value: string | null): value is TaskTab {
+  return value === "all" || value === "mine" || value === "overdue" || value === "done";
+}
+
 export function TaskTable({
   limit,
   initialTab = "all",
@@ -44,16 +62,36 @@ export function TaskTable({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [tab, setTabState] = useState<TaskTab>(initialTab);
+  const searchParams = useSearchParams();
+
+  // URL クエリを唯一の状態源にする (KPI カード等からのリンクで確実に切り替わる)
+  const tabParam = searchParams.get("tab");
+  const tab: TaskTab = isTaskTab(tabParam) ? tabParam : initialTab;
+  const dueParam = searchParams.get("due");
+  const dueFilter: DueFilter = dueParam === "today" || dueParam === "week" ? dueParam : null;
+
   const [priorityFilter, setPriorityFilter] = useState<Priority | "all">("all");
+  const [priorityOpen, setPriorityOpen] = useState(false);
   const [compact, setCompact] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const priorityRef = useRef<HTMLDivElement>(null);
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const { data: tasks } = useTasks({ tab, projectId });
   const { data: allTasksForCount } = useTasks({ tab: "all", projectId });
   const { data: members } = useMembers();
   const { data: projects } = useProjects("all");
   const toggle = useToggleTaskDone({ tab, projectId });
+
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (priorityRef.current && !priorityRef.current.contains(e.target as Node)) {
+        setPriorityOpen(false);
+      }
+    }
+    window.addEventListener("mousedown", onClick);
+    return () => window.removeEventListener("mousedown", onClick);
+  }, []);
 
   const memberMap = useMemo(
     () => new Map(members?.map((m) => [m.id, m])),
@@ -76,26 +114,49 @@ export function TaskTable({
     };
   }, [allTasksForCount]);
 
-  const filtered = useMemo(
-    () => (priorityFilter === "all" ? tasks : tasks?.filter((t) => t.priority === priorityFilter)),
-    [tasks, priorityFilter],
-  );
-  const rows = limit && !showAll ? filtered?.slice(0, limit) : filtered;
+  const filtered = useMemo(() => {
+    let list = tasks ?? [];
+    if (dueFilter) {
+      list = list.filter((t) => {
+        if (!t.dueDate || t.status === "done") return false;
+        const d = daysUntil(t.dueDate);
+        return dueFilter === "today" ? d === 0 : d >= 0 && d <= 7;
+      });
+    }
+    if (priorityFilter !== "all") {
+      list = list.filter((t) => t.priority === priorityFilter);
+    }
+    return list;
+  }, [tasks, dueFilter, priorityFilter]);
+  const rows = limit && !showAll ? filtered.slice(0, limit) : filtered;
+  const hiddenCount = limit ? Math.max(0, filtered.length - limit) : 0;
 
-  function cyclePriorityFilter() {
-    const idx = PRIORITY_OPTIONS.findIndex((o) => o.key === priorityFilter);
-    setPriorityFilter(PRIORITY_OPTIONS[(idx + 1) % PRIORITY_OPTIONS.length].key);
+  function replaceQuery(mutate: (params: URLSearchParams) => void) {
+    const params = new URLSearchParams(searchParams.toString());
+    mutate(params);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
 
   function setTab(next: TaskTab) {
-    setTabState(next);
-    const params = new URLSearchParams(
-      typeof window !== "undefined" ? window.location.search : "",
-    );
-    if (next === "all") params.delete("tab");
-    else params.set("tab", next);
-    const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    replaceQuery((params) => {
+      if (next === initialTab) params.delete("tab");
+      else params.set("tab", next);
+      params.delete("due"); // タブ切替時は期限フィルタを解除して状態を単純に保つ
+    });
+  }
+
+  function clearDueFilter() {
+    replaceQuery((params) => params.delete("due"));
+  }
+
+  function onTabKeyDown(e: React.KeyboardEvent, index: number) {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    e.preventDefault();
+    const delta = e.key === "ArrowLeft" ? -1 : 1;
+    const next = (index + delta + TABS.length) % TABS.length;
+    tabRefs.current[next]?.focus();
+    setTab(TABS[next].key);
   }
 
   const rowPadding = compact ? "py-2" : "py-3.5";
@@ -104,14 +165,25 @@ export function TaskTable({
     <SectionCard bodyClassName="px-0 pb-0" className="data-card">
       {/* タブ + ツール */}
       <div className="flex items-center justify-between gap-3 px-6 -mt-1 border-b border-line">
-        <div className="flex items-center gap-5 overflow-x-auto">
-          {TABS.map((t) => {
+        <div
+          role="tablist"
+          aria-label="タスクの絞り込み"
+          className="flex items-center gap-5 overflow-x-auto no-scrollbar"
+        >
+          {TABS.map((t, i) => {
             const active = tab === t.key;
             return (
               <button
                 key={t.key}
+                ref={(el) => {
+                  tabRefs.current[i] = el;
+                }}
                 type="button"
+                role="tab"
+                aria-selected={active}
+                tabIndex={active ? 0 : -1}
                 onClick={() => setTab(t.key)}
+                onKeyDown={(e) => onTabKeyDown(e, i)}
                 className={cn(
                   "relative flex items-center gap-1.5 py-3 text-sm whitespace-nowrap transition-colors",
                   active
@@ -120,31 +192,76 @@ export function TaskTable({
                 )}
               >
                 {t.label}
-                <span className="text-xs text-ink-muted">{counts[t.key]}</span>
+                <span className="text-xs text-ink-soft">{counts[t.key]}</span>
                 {active && (
                   <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-brand-600" />
                 )}
               </button>
             );
           })}
+          {dueFilter && (
+            <button
+              type="button"
+              onClick={clearDueFilter}
+              title="期限フィルタを解除"
+              className="inline-flex items-center gap-1 h-7 rounded-full border border-brand-300 bg-brand-50 px-2.5 text-xs font-medium text-brand-700 whitespace-nowrap"
+            >
+              {DUE_FILTER_LABEL[dueFilter]}
+              <X className="size-3" />
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={cyclePriorityFilter}
-            className={cn(
-              "inline-flex items-center gap-1.5 h-8 rounded-lg border px-2.5 text-xs font-medium transition-colors",
-              priorityFilter === "all"
-                ? "border-line text-ink-soft hover:bg-surface-muted"
-                : "border-brand-300 bg-brand-50 text-brand-700",
+          <div className="relative" ref={priorityRef}>
+            <button
+              type="button"
+              onClick={() => setPriorityOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={priorityOpen}
+              className={cn(
+                "inline-flex items-center gap-1.5 h-8 rounded-lg border px-2.5 text-xs font-medium transition-colors",
+                priorityFilter === "all"
+                  ? "border-line text-ink-soft hover:bg-surface-muted"
+                  : "border-brand-300 bg-brand-50 text-brand-700",
+              )}
+            >
+              <SlidersHorizontal className="size-3.5" />
+              {PRIORITY_OPTIONS.find((o) => o.key === priorityFilter)?.label}
+              <ChevronDown className="size-3.5" />
+            </button>
+            {priorityOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 mt-1.5 w-40 rounded-xl border border-line bg-surface shadow-pop p-1.5 z-30"
+              >
+                {PRIORITY_OPTIONS.map((o) => (
+                  <button
+                    key={o.key}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={priorityFilter === o.key}
+                    onClick={() => {
+                      setPriorityFilter(o.key);
+                      setPriorityOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs text-left transition-colors",
+                      priorityFilter === o.key
+                        ? "bg-brand-50 text-brand-700 font-semibold"
+                        : "text-ink hover:bg-surface-muted",
+                    )}
+                  >
+                    {o.label}
+                    {priorityFilter === o.key && <Check className="size-3.5" />}
+                  </button>
+                ))}
+              </div>
             )}
-          >
-            <SlidersHorizontal className="size-3.5" />
-            {PRIORITY_OPTIONS.find((o) => o.key === priorityFilter)?.label}
-          </button>
+          </div>
           <button
             type="button"
             onClick={() => setCompact((v) => !v)}
+            aria-pressed={compact}
             className={cn(
               "inline-flex items-center gap-1.5 h-8 rounded-lg border px-2.5 text-xs font-medium transition-colors",
               compact
@@ -162,7 +279,7 @@ export function TaskTable({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs text-ink-muted">
+            <tr className="text-left text-xs text-ink-soft">
               <th className="w-12 py-2.5 pl-6" />
               <th className="py-2.5 font-medium">タスク名</th>
               <th className="py-2.5 font-medium">プロジェクト</th>
@@ -173,7 +290,7 @@ export function TaskTable({
             </tr>
           </thead>
           <tbody>
-            {rows?.map((task) => {
+            {rows.map((task) => {
               const project = task.projectId ? projectMap.get(task.projectId) : undefined;
               const done = task.status === "done";
               const assignee = task.assigneeIds[0]
@@ -184,19 +301,24 @@ export function TaskTable({
                   key={task.id}
                   className="border-t border-line hover:bg-surface-muted/60 transition-colors"
                 >
-                  <td className={cn("pl-6", rowPadding)}>
+                  <td className={cn("pl-4", rowPadding)}>
+                    {/* 当たり判定 36px / 視覚円 20px (タッチターゲット確保) */}
                     <button
                       type="button"
                       onClick={() => toggle.mutate(task.id)}
                       aria-label={done ? "未完了に戻す" : "完了にする"}
-                      className={cn(
-                        "inline-flex items-center justify-center size-5 rounded-full border transition-colors",
-                        done
-                          ? "bg-emerald-500 border-emerald-500 text-white"
-                          : "border-ink-muted/60 hover:border-brand-500",
-                      )}
+                      className="group/check inline-flex items-center justify-center size-9 rounded-full"
                     >
-                      {done && <Check className="size-3" strokeWidth={3} />}
+                      <span
+                        className={cn(
+                          "inline-flex items-center justify-center size-5 rounded-full border transition-colors",
+                          done
+                            ? "bg-[#16A34A] border-[#16A34A] text-white"
+                            : "border-ink-muted/60 group-hover/check:border-brand-500",
+                        )}
+                      >
+                        {done && <Check className="size-3" strokeWidth={3} />}
+                      </span>
                     </button>
                   </td>
                   <td className={cn("pr-4", rowPadding)}>
@@ -244,20 +366,20 @@ export function TaskTable({
             })}
           </tbody>
         </table>
-        {rows?.length === 0 && (
-          <p className="py-10 text-center text-sm text-ink-muted">
+        {rows.length === 0 && (
+          <p className="py-10 text-center text-sm text-ink-soft">
             該当するタスクはありません
           </p>
         )}
       </div>
 
-      {limit && (filtered?.length ?? 0) > limit && (
+      {limit && hiddenCount > 0 && (
         <button
           type="button"
           onClick={() => setShowAll((v) => !v)}
           className="w-full flex items-center justify-center gap-1 py-3 border-t border-line text-sm font-medium text-ink-soft hover:bg-surface-muted transition-colors"
         >
-          {showAll ? "表示を減らす" : "すべてのタスクを表示"}
+          {showAll ? "表示を減らす" : `残り${hiddenCount}件を表示`}
           {showAll ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
         </button>
       )}

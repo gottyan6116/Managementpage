@@ -9,10 +9,8 @@ import {
   HelpCircle,
   ListTodo,
   Menu,
-  Moon,
   Plus,
   StickyNote,
-  Sun,
 } from "lucide-react";
 import Link from "next/link";
 import { useNotifications } from "@/lib/queries/hooks";
@@ -29,14 +27,21 @@ const CREATE_ITEMS = [
 
 export function Header() {
   const toggleSidebar = useUiStore((s) => s.toggleSidebar);
+  const setMobileSidebarOpen = useUiStore((s) => s.setMobileSidebarOpen);
   const { data: notifications } = useNotifications();
+
+  function handleMenuClick() {
+    // lg 以上は折りたたみトグル、lg 未満はオフキャンバスドロワーを開く
+    if (window.matchMedia("(min-width: 1024px)").matches) toggleSidebar();
+    else setMobileSidebarOpen(true);
+  }
   const unread = notifications?.filter((n) => !n.isRead).length ?? 0;
 
   const [createOpen, setCreateOpen] = useState(false);
   const [noticeOpen, setNoticeOpen] = useState(false);
-  const [dark, setDark] = useState(false);
   const createRef = useRef<HTMLDivElement>(null);
   const noticeRef = useRef<HTMLDivElement>(null);
+  const noticeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -47,19 +52,27 @@ export function Header() {
         setNoticeOpen(false);
       }
     }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      setCreateOpen(false);
+      setNoticeOpen((open) => {
+        if (open) noticeButtonRef.current?.focus();
+        return false;
+      });
+    }
     window.addEventListener("mousedown", onClick);
-    return () => window.removeEventListener("mousedown", onClick);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("mousedown", onClick);
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, []);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = dark ? "dark" : "light";
-  }, [dark]);
 
   return (
     <header className="header-glass h-16 shrink-0 flex items-center gap-4 px-6">
       <button
         type="button"
-        onClick={toggleSidebar}
+        onClick={handleMenuClick}
         aria-label="サイドバーを開閉"
         className="inline-flex items-center justify-center size-9 rounded-lg text-ink-soft hover:bg-surface-muted transition-colors"
       >
@@ -73,9 +86,12 @@ export function Header() {
         {/* 通知 */}
         <div className="relative" ref={noticeRef}>
           <button
+            ref={noticeButtonRef}
             type="button"
             onClick={() => setNoticeOpen((v) => !v)}
             aria-label={`通知 ${unread}件`}
+            aria-haspopup="menu"
+            aria-expanded={noticeOpen}
             className="relative inline-flex items-center justify-center size-9 rounded-lg text-ink-soft hover:bg-surface-muted transition-colors"
           >
             <Bell className="size-5" />
@@ -86,22 +102,27 @@ export function Header() {
             )}
           </button>
           {noticeOpen && (
-            <div className="absolute right-0 mt-2 w-80 rounded-xl border border-line bg-surface shadow-pop p-2 z-50">
+            <div
+              role="menu"
+              aria-label="通知センター"
+              className="absolute right-0 mt-2 w-80 rounded-xl border border-line bg-surface shadow-pop p-2 z-50"
+            >
               <div className="px-2 py-2">
                 <p className="text-sm font-semibold text-ink">通知センター</p>
-                <p className="text-xs text-ink-muted">期限・メンション・依頼</p>
+                <p className="text-xs text-ink-soft">期限・メンション・依頼</p>
               </div>
               <div className="space-y-1">
                 {notifications?.slice(0, 3).map((notice) => (
                   <Link
                     key={notice.id}
+                    role="menuitem"
                     href={notice.link ?? "/todo"}
                     onClick={() => setNoticeOpen(false)}
                     className="block rounded-lg px-3 py-2.5 hover:bg-surface-muted"
                   >
                     <span className="block text-sm font-medium text-ink">{notice.title}</span>
                     {notice.body && (
-                      <span className="mt-0.5 block text-xs text-ink-muted">{notice.body}</span>
+                      <span className="mt-0.5 block text-xs text-ink-soft">{notice.body}</span>
                     )}
                   </Link>
                 ))}
@@ -110,14 +131,10 @@ export function Header() {
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setDark((v) => !v)}
-          aria-label={dark ? "ライトモードに切り替え" : "ダークモードに切り替え"}
-          className="inline-flex items-center justify-center size-9 rounded-lg text-ink-soft hover:bg-surface-muted transition-colors"
-        >
-          {dark ? <Sun className="size-5" /> : <Moon className="size-5" />}
-        </button>
+        {/*
+          ダークモード切替は、ガラス系スタイルのダークトークンが未整備で
+          切替時に表示が破綻するため、対応が済むまで非表示にしている。
+        */}
 
         {/* ヘルプ */}
         <button

@@ -3,8 +3,8 @@ import {
   Briefcase,
   CircleDollarSign,
   FileText,
+  Home,
   LayoutGrid,
-  ListTodo,
   Timer,
   StickyNote,
   type LucideIcon,
@@ -21,14 +21,18 @@ export interface NavSection {
   items: NavItem[];
 }
 
-/** サイドバーメニュー: タスク3ビュー、案件、ナレッジを分離 */
+/**
+ * サイドバーメニュー。命名は 1対1 を厳守する:
+ * ホーム=/todo(サマリー) / ボード=/board。「Todo」という語は
+ * 複数の場所を指して混乱を生んだため使わない。
+ */
 export const NAV_SECTIONS: NavSection[] = [
   {
     label: "ワークスペース",
     items: [
-      { label: "サマリー", href: "/todo", icon: ListTodo },
+      { label: "ホーム", href: "/todo", icon: Home },
       { label: "ガントチャート", href: "/gantt", icon: BarChart3 },
-      { label: "Todo", href: "/board", icon: LayoutGrid },
+      { label: "ボード", href: "/board", icon: LayoutGrid },
       { label: "工数", href: "/time", icon: Timer },
     ],
   },
