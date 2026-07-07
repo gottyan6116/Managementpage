@@ -164,7 +164,20 @@ body {
    Glassmorphism ユーティリティ
 ================================================== */
 
+/*
+  背景グラデーションは独立した fixed レイヤー (::before) に描く。
+  background-attachment: fixed はコンポジタスクロールを無効化し
+  スクロールごとに全面再ペイントを強制するため使用禁止。
+*/
 .app-background {
+  background-color: var(--app-bg-base);
+}
+.app-background::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-color: var(--app-bg-base);
   background-image:
     radial-gradient(
@@ -197,7 +210,6 @@ body {
       rgba(255, 244, 248, 0.28) 48%,
       rgba(255, 244, 248, 0) 78%
     );
-  background-attachment: fixed;
 }
 
 .sidebar-glass {
@@ -218,8 +230,8 @@ body {
   box-shadow:
     0 18px 45px rgba(52, 76, 120, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(22px) saturate(145%);
-  -webkit-backdrop-filter: blur(22px) saturate(145%);
+  backdrop-filter: blur(10px) saturate(145%);
+  -webkit-backdrop-filter: blur(10px) saturate(145%);
 }
 
 .header-glass {
@@ -231,25 +243,27 @@ body {
       rgba(255, 255, 255, 0.84) 100%
     );
   border-bottom: 1px solid rgba(220, 229, 243, 0.66);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
 }
 
+/*
+  コンテンツカードは backdrop-filter を使わず不透明近似で描く。
+  ガラス質感 (blur) は「動くものの背面」= サイドバー/ヘッダーの2面に限定する。
+*/
 .glass-card {
   background:
     linear-gradient(
       145deg,
-      rgba(255, 255, 255, 0.9) 0%,
-      rgba(255, 255, 255, 0.76) 52%,
-      rgba(247, 250, 255, 0.7) 100%
+      rgba(255, 255, 255, 0.97) 0%,
+      rgba(255, 255, 255, 0.93) 52%,
+      rgba(247, 250, 255, 0.92) 100%
     );
   border: 1px solid rgba(255, 255, 255, 0.92);
   box-shadow:
     0 16px 40px rgba(55, 78, 118, 0.07),
     0 4px 12px rgba(55, 78, 118, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(18px) saturate(138%);
-  -webkit-backdrop-filter: blur(18px) saturate(138%);
 }
 
 .data-card {
@@ -323,6 +337,23 @@ body {
 .kpi-purple-icon {
   background: #f5efff;
   color: #8b5cf6;
+}
+.kpi-success {
+  background: linear-gradient(135deg, rgba(248, 255, 252, 0.96) 0%, rgba(232, 250, 243, 0.8) 100%);
+  border: 1px solid #ccefe4;
+}
+.kpi-success-icon {
+  background: #eafaf5;
+  color: #0faa83;
+}
+/* 0件時: 警告色を点灯させず「良い0」として静かに表示する */
+.kpi-neutral {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 253, 0.9) 100%);
+  border: 1px solid var(--border-soft);
+}
+.kpi-neutral-icon {
+  background: #f1f5f9;
+  color: #94a3b8;
 }
 
 .gantt-green {
