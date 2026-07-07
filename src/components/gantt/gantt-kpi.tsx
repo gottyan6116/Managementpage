@@ -1,7 +1,9 @@
 "use client";
 
-import { Activity, AlertTriangle, Flag, Gauge, type LucideIcon } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle2, Flag, type LucideIcon } from "lucide-react";
 import { Donut } from "@/components/shared/charts";
+import { useMilestones, useTasks } from "@/lib/queries/hooks";
+import { daysUntil } from "@/lib/date";
 
 function CompactKpi({
   icon: Icon,
@@ -52,8 +54,26 @@ function CompactKpi({
   );
 }
 
-/** ガント上部 KPI 4枚 (docs/04 §2)。タイトル右にコンパクト横並び。 */
+/** ガント上部 KPI 4枚 (docs/04 §2)。固定値ではなく実データから算出する。 */
 export function GanttKpiRow() {
+  const { data: tasks } = useTasks({ tab: "all" });
+  const { data: milestones } = useMilestones();
+
+  const list = tasks ?? [];
+  const total = list.length;
+  const inProgress = list.filter((t) => t.status === "in_progress").length;
+  const overdue = list.filter(
+    (t) => t.dueDate && daysUntil(t.dueDate) < 0 && t.status !== "done",
+  ).length;
+  const done = list.filter((t) => t.status === "done").length;
+  const doneRate = total > 0 ? Math.round((done / total) * 100) : 0;
+  const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
+  const weekMilestones = (milestones ?? []).filter((m) => {
+    if (m.isDone) return false;
+    const d = daysUntil(m.dueDate);
+    return d >= 0 && d <= 7;
+  }).length;
+
   return (
     <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
       <CompactKpi
@@ -61,40 +81,40 @@ export function GanttKpiRow() {
         iconColor="#2563EB"
         iconBg="#DBE8FE"
         label="進行中タスク数"
-        value={42}
-        sub="全体の 58%"
+        value={inProgress}
+        sub={`全体の ${pct(inProgress)}%`}
       />
       <CompactKpi
         icon={AlertTriangle}
         iconColor="#DC2626"
         iconBg="#FEE2E2"
         label="遅延タスク"
-        value={8}
-        sub="全体の 11%"
-        subTone="danger"
+        value={overdue}
+        sub={overdue > 0 ? `全体の ${pct(overdue)}%` : "遅延なし"}
+        subTone={overdue > 0 ? "danger" : "muted"}
       />
       <CompactKpi
         icon={Flag}
         iconColor="#7C3AED"
         iconBg="#EDE9FE"
         label="今週のマイルストーン"
-        value={6}
+        value={weekMilestones}
         sub="完了予定"
       />
       <CompactKpi
-        icon={Gauge}
+        icon={CheckCircle2}
         iconColor="#0F766E"
         iconBg="#CCFBF1"
-        label="稼働率(今週)"
-        value="78%"
-        sub="最適水準"
+        label="タスク完了率"
+        value={`${doneRate}%`}
+        sub={`完了 ${done}/${total}`}
         graph={
           <Donut
             size={46}
             thickness={7}
             slices={[
-              { label: "稼働", value: 78, color: "#14B8A6" },
-              { label: "空き", value: 22, color: "#E8EDF3" },
+              { label: "完了", value: doneRate, color: "#14B8A6" },
+              { label: "未完了", value: 100 - doneRate, color: "#E8EDF3" },
             ]}
           />
         }

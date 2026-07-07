@@ -109,3 +109,13 @@ export function computeRange(
   const end = endOfWeek(addDays(hi, padAfter), WEEK_OPTS);
   return { start, end, totalDays: differenceInCalendarDays(end, start) + 1 };
 }
+
+/**
+ * プレビュー用の表示範囲: 今日を含む前1週〜後2週のみ。
+ * 全期間を DOM 描画するとプレビューの域を超え、描画コストも跳ね上がるため。
+ */
+export function computePreviewRange(today: Date): GanttRange {
+  const start = startOfWeek(addDays(today, -7), WEEK_OPTS);
+  const end = endOfWeek(addDays(today, 14), WEEK_OPTS);
+  return { start, end, totalDays: differenceInCalendarDays(end, start) + 1 };
+}

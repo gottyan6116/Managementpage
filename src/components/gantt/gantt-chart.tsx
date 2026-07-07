@@ -16,7 +16,7 @@ import {
   useUpdateGanttAssignee,
   useUpdateTaskSchedule,
 } from "@/lib/queries/hooks";
-import { APP_TODAY } from "@/lib/date";
+import { appToday } from "@/lib/date";
 import { visibleGanttRows } from "@/lib/gantt-derived";
 import {
   GANTT_HEADER_HEIGHT,
@@ -24,6 +24,7 @@ import {
   addDaysISO,
   barGeometry,
   buildWeeks,
+  computePreviewRange,
   computeRange,
   dateToX,
 } from "@/lib/gantt";
@@ -99,6 +100,7 @@ export function GanttChart({
 
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
   const syncing = useRef(false);
   const dragStartX = useRef(0);
   const [drag, setDrag] = useState<DragState | null>(null);
@@ -106,20 +108,54 @@ export function GanttChart({
     useState<Set<string> | null>(null);
 
   const memberMap = useMemo(() => new Map(members?.map((m) => [m.id, m])), [members]);
-  const defaultCollapsedProjects = useMemo(() => {
-    if (projectId || variant !== "full") return new Set<string>();
-    return new Set(liveRows.filter((row) => row.type === "project").map((row) => row.id));
-  }, [projectId, liveRows, variant]);
-  const collapsedProjects = manualCollapsedProjects ?? defaultCollapsedProjects;
-  const visibleRows = useMemo(
-    () => visibleGanttRows(liveRows, collapsedProjects),
-    [liveRows, collapsedProjects],
-  );
 
   const range = useMemo(() => {
+    if (variant === "preview") return computePreviewRange(appToday());
     const dates = liveRows.flatMap((r) => [r.bar?.start, r.bar?.due]);
     return computeRange(dates);
-  }, [liveRows]);
+  }, [liveRows, variant]);
+
+  // プレビューは表示範囲に重なる行だけに絞る (行のないプロジェクトは落とす)
+  const scopedRows = useMemo(() => {
+    if (variant !== "preview") return liveRows;
+    const s = format(range.start, "yyyy-MM-dd");
+    const e = format(range.end, "yyyy-MM-dd");
+    const overlaps = (row: GanttRow) => {
+      if (row.milestone) return row.milestone.date >= s && row.milestone.date <= e;
+      if (row.bar) return row.bar.start <= e && row.bar.due >= s;
+      return false;
+    };
+    const result: GanttRow[] = [];
+    let pendingProject: GanttRow | null = null;
+    let pendingChildren: GanttRow[] = [];
+    const flush = () => {
+      if (pendingProject && (pendingChildren.length > 0 || overlaps(pendingProject))) {
+        result.push(pendingProject, ...pendingChildren);
+      }
+      pendingProject = null;
+      pendingChildren = [];
+    };
+    for (const row of liveRows) {
+      if (row.type === "project") {
+        flush();
+        pendingProject = row;
+      } else if (overlaps(row)) {
+        pendingChildren.push(row);
+      }
+    }
+    flush();
+    return result;
+  }, [liveRows, variant, range]);
+
+  const defaultCollapsedProjects = useMemo(() => {
+    if (projectId || variant !== "full") return new Set<string>();
+    return new Set(scopedRows.filter((row) => row.type === "project").map((row) => row.id));
+  }, [projectId, scopedRows, variant]);
+  const collapsedProjects = manualCollapsedProjects ?? defaultCollapsedProjects;
+  const visibleRows = useMemo(
+    () => visibleGanttRows(scopedRows, collapsedProjects),
+    [scopedRows, collapsedProjects],
+  );
 
   function childTaskIds(projectRowId: string): string[] {
     const idx = liveRows.findIndex((r) => r.id === projectRowId);
@@ -150,6 +186,10 @@ export function GanttChart({
   const leftWidth = variant === "full" ? 440 : 190;
 
   function syncScroll(from: "left" | "right") {
+    // 週ヘッダーはボディの横スクロールに常に追従させる (日付とバーの対応を保証)
+    if (from === "right" && headerRef.current && rightRef.current) {
+      headerRef.current.scrollLeft = rightRef.current.scrollLeft;
+    }
     if (syncing.current) return;
     syncing.current = true;
     const src = from === "left" ? leftRef.current : rightRef.current;
@@ -165,25 +205,33 @@ export function GanttChart({
   }, [visibleRows]);
 
   const bodyHeight = visibleRows.length * GANTT_ROW_HEIGHT;
-  const todayX = dateToX(APP_TODAY, range.start, dayWidth) + dayWidth / 2;
+  const today = appToday();
+  const todayX = dateToX(today, range.start, dayWidth) + dayWidth / 2;
   const paneHeight = height ?? (variant === "preview" ? 260 : 560);
+
+  function scrollToToday() {
+    const el = rightRef.current;
+    if (!el) return;
+    const left = Math.max(0, todayX - el.clientWidth / 2);
+    el.scrollLeft = left;
+    if (headerRef.current) headerRef.current.scrollLeft = el.scrollLeft;
+  }
 
   // 「今日にフィット」: 右ペインを今日が中央に来るようスクロール
   useEffect(() => {
     function fit() {
-      const el = rightRef.current;
-      if (el) el.scrollLeft = Math.max(0, todayX - el.clientWidth / 2);
+      scrollToToday();
     }
     window.addEventListener("gantt:fit-today", fit);
     return () => window.removeEventListener("gantt:fit-today", fit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todayX]);
 
-  // 初回マウント時に今日付近へスクロール
+  // 初回マウント/データ変化時に今日付近へスクロール (ヘッダーも同位置へ)
   useEffect(() => {
-    const el = rightRef.current;
-    if (el) el.scrollLeft = Math.max(0, todayX - el.clientWidth / 2);
+    scrollToToday();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows]);
+  }, [rows, todayX]);
 
   // バードラッグ (移動 / リサイズ) のグローバルリスナ
   useEffect(() => {
@@ -280,6 +328,7 @@ export function GanttChart({
       {/* ===== 右: タイムライン ===== */}
       <div className="flex-1 min-w-0 flex flex-col">
         <div
+          ref={headerRef}
           className="overflow-hidden border-b border-line bg-surface"
           style={{ height: GANTT_HEADER_HEIGHT }}
         >
@@ -294,7 +343,7 @@ export function GanttChart({
                     <div
                       key={j}
                       className={cn(
-                        "flex items-center justify-center text-[10px]",
+                        "flex items-center justify-center text-[11px]",
                         day.isWeekend ? "text-ink-muted bg-surface-muted/50" : "text-ink-soft",
                       )}
                       style={{ width: dayWidth, height: GANTT_HEADER_HEIGHT - 24 }}
@@ -344,8 +393,8 @@ export function GanttChart({
               className="gantt-today-line absolute top-0 bottom-0 w-px pointer-events-none z-20"
               style={{ left: todayX }}
             >
-              <span className="absolute -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-600 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                今日 {format(APP_TODAY, "M/d", { locale: ja })}
+              <span className="absolute -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
+                今日 {format(today, "M/d", { locale: ja })}
               </span>
             </div>
 
@@ -394,6 +443,14 @@ export function GanttChart({
                   editable={editable}
                   editing={drag?.id === row.id}
                   onBeginDrag={(e, mode) => beginDrag(e, row, mode)}
+                  onKeyMove={(delta) => {
+                    if (row.type !== "task" || !row.bar) return;
+                    editSchedule.mutate({
+                      id: row.id,
+                      startDate: addDaysISO(row.bar.start, delta),
+                      dueDate: addDaysISO(row.bar.due, delta),
+                    });
+                  }}
                 />
               );
             })}
@@ -540,7 +597,7 @@ function LeftRow({
                 {member ? (
                   <Avatar member={member} size="sm" />
                 ) : editable ? (
-                  <span className="text-[10px] text-ink-muted">未設定</span>
+                  <span className="text-[11px] text-ink-soft">未設定</span>
                 ) : null}
               </button>
             )}
@@ -578,6 +635,7 @@ function BarRow({
   editable,
   editing,
   onBeginDrag,
+  onKeyMove,
 }: {
   row: GanttRow;
   index: number;
@@ -588,8 +646,19 @@ function BarRow({
   editable: boolean;
   editing: boolean;
   onBeginDrag: (e: React.PointerEvent, mode: DragMode) => void;
+  onKeyMove: (deltaDays: number) => void;
 }) {
   const top = index * GANTT_ROW_HEIGHT;
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      onKeyMove(-1);
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      onKeyMove(1);
+    }
+  }
 
   if (row.milestone) {
     const date = effDue ?? row.milestone.date;
@@ -607,7 +676,7 @@ function BarRow({
             className={cn("block size-3 rotate-45 rounded-[2px]", editing && "ring-2 ring-brand-400")}
             style={{ backgroundColor: row.color }}
           />
-          <span className="text-[10px] font-medium text-ink-soft whitespace-nowrap">
+          <span className="text-[11px] font-medium text-ink-soft whitespace-nowrap">
             {format(new Date(date), "M/d", { locale: ja })}
           </span>
         </div>
@@ -637,6 +706,10 @@ function BarRow({
           touchAction: "none",
         }}
         onPointerDown={canEdit ? (e) => onBeginDrag(e, "move") : undefined}
+        role={canEdit ? "button" : "img"}
+        tabIndex={canEdit ? 0 : undefined}
+        onKeyDown={canEdit ? handleKeyDown : undefined}
+        aria-label={`${row.label} 進捗${row.progress}% 期間${format(new Date(effStart), "M/d")}から${format(new Date(effDue), "M/d")}${canEdit ? "（左右矢印キーで1日移動）" : ""}`}
         title={`${row.label} (${row.progress}%) ${format(new Date(effStart), "M/d")}–${format(new Date(effDue), "M/d")}`}
       >
         <div
@@ -661,7 +734,7 @@ function BarRow({
           </>
         )}
       </div>
-      <span className="ml-1.5 text-[10px] text-ink-muted whitespace-nowrap tabular-nums">
+      <span className="ml-1.5 text-[11px] text-ink-soft whitespace-nowrap tabular-nums">
         {format(new Date(effDue), "M/d", { locale: ja })}
       </span>
     </div>
