@@ -2,10 +2,21 @@ import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import { ja } from "date-fns/locale";
 
 /**
- * デモ用の「今日」。CEO確認済みの現在日付に合わせる。
- * フェーズ2で実データに切り替える際は new Date() に置き換える。
+ * アプリ全体の「今日」(JST の暦日)。
+ * Vercel のサーバーは UTC のため、素の new Date() で日付文字列を作ると
+ * JST 0:00〜8:59 の間ズレる。必ず Asia/Tokyo で丸めた暦日を使う。
+ * デモで日付を固定したい場合は NEXT_PUBLIC_DEMO_TODAY=yyyy-MM-dd を設定する。
  */
-export const APP_TODAY = parseISO("2026-07-02");
+const DEMO_TODAY = process.env.NEXT_PUBLIC_DEMO_TODAY;
+
+export function appToday(): Date {
+  if (DEMO_TODAY) return parseISO(DEMO_TODAY);
+  // en-CA ロケールは yyyy-MM-dd を返す
+  const ymd = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+  }).format(new Date());
+  return parseISO(ymd);
+}
 
 export function toDate(value: string | Date): Date {
   return typeof value === "string" ? parseISO(value) : value;
@@ -21,9 +32,9 @@ export function formatMonth(value: string | Date): string {
   return format(toDate(value), "yyyy年M月", { locale: ja });
 }
 
-/** APP_TODAY を起点とした残り日数 (負 = 超過) */
+/** 今日 (JST) を起点とした残り日数 (負 = 超過) */
 export function daysUntil(value: string | Date): number {
-  return differenceInCalendarDays(toDate(value), APP_TODAY);
+  return differenceInCalendarDays(toDate(value), appToday());
 }
 
 export type DueTone = "overdue" | "today" | "soon" | "normal" | "done";
@@ -62,6 +73,6 @@ export const DUE_TONE_COLOR: Record<DueTone, string> = {
   overdue: "#DC2626",
   today: "#DC2626",
   soon: "#EA580C",
-  normal: "#94A3B8",
+  normal: "#64748B", // 判断材料として読ませるため muted (#94A3B8, 2.5:1) は使わない
   done: "#15803D",
 };
