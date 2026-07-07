@@ -9,7 +9,6 @@ import type {
   BoardColumn,
   BillingRecord,
   ClientCompany,
-  DashboardKpi,
   DocumentItem,
   FileItem,
   Member,
@@ -75,22 +74,22 @@ type TaskSeed = Omit<Task, "boardColumnId" | "boardPosition" | "isMilestone"> &
 const seed: TaskSeed[] = [
   // --- p1 新規業務改革プロジェクト (65%) ---
   { id: "t1-1", projectId: "p1", parentTaskId: null, title: "現状分析・要件定義", status: "done", priority: "high", progress: 100, startDate: "2026-06-28", dueDate: "2026-07-02", sortOrder: 1, assigneeIds: ["m-sato"] },
-  { id: "t1-2", projectId: "p1", parentTaskId: null, title: "業務フロー設計", status: "in_progress", priority: "high", progress: 80, startDate: "2026-07-05", dueDate: "2026-07-12", sortOrder: 2, assigneeIds: ["m-yamada"] },
-  { id: "t1-3", projectId: "p1", parentTaskId: null, title: "要件定義レビュー", status: "done", priority: "high", progress: 100, startDate: "2026-07-15", dueDate: "2026-07-15", sortOrder: 3, assigneeIds: ["m-suzuki"], isMilestone: true },
+  { id: "t1-2", projectId: "p1", parentTaskId: null, title: "業務フロー設計", status: "in_progress", priority: "high", progress: 80, startDate: "2026-06-30", dueDate: "2026-07-12", sortOrder: 2, assigneeIds: ["m-yamada"] },
+  { id: "t1-3", projectId: "p1", parentTaskId: null, title: "要件定義レビュー", status: "todo", priority: "high", progress: 0, startDate: "2026-07-15", dueDate: "2026-07-15", sortOrder: 3, assigneeIds: ["m-suzuki"], isMilestone: true },
   { id: "t1-4", projectId: "p1", parentTaskId: null, title: "新業務プロセス設計", status: "in_progress", priority: "medium", progress: 40, startDate: "2026-07-15", dueDate: "2026-07-22", sortOrder: 4, assigneeIds: ["m-tanaka"] },
   { id: "t1-5", projectId: "p1", parentTaskId: null, title: "ユーザートレーニング準備", status: "todo", priority: "medium", progress: 0, startDate: "2026-07-22", dueDate: "2026-08-06", sortOrder: 5, assigneeIds: ["m-yamada"] },
 
   // --- p2 CRM導入支援 (45%) ---
   { id: "t2-1", projectId: "p2", parentTaskId: null, title: "要件ヒアリング", status: "done", priority: "medium", progress: 100, startDate: "2026-06-28", dueDate: "2026-07-07", sortOrder: 1, assigneeIds: ["m-sato"] },
-  { id: "t2-2", projectId: "p2", parentTaskId: null, title: "業務フロー・設計", status: "in_progress", priority: "high", progress: 60, startDate: "2026-07-07", dueDate: "2026-07-16", sortOrder: 2, assigneeIds: ["m-yamada"] },
-  { id: "t2-3", projectId: "p2", parentTaskId: null, title: "システム設定・カスタマイズ", status: "in_progress", priority: "medium", progress: 30, startDate: "2026-07-16", dueDate: "2026-07-26", sortOrder: 3, assigneeIds: ["m-suzuki"] },
+  { id: "t2-2", projectId: "p2", parentTaskId: null, title: "CRM業務フロー設計", status: "in_progress", priority: "high", progress: 60, startDate: "2026-07-01", dueDate: "2026-07-16", sortOrder: 2, assigneeIds: ["m-yamada"] },
+  { id: "t2-3", projectId: "p2", parentTaskId: null, title: "システム設定・カスタマイズ", status: "todo", priority: "medium", progress: 0, startDate: "2026-07-16", dueDate: "2026-07-26", sortOrder: 3, assigneeIds: ["m-suzuki"] },
   { id: "t2-4", projectId: "p2", parentTaskId: null, title: "テスト・ユーザー検証", status: "todo", priority: "medium", progress: 0, startDate: "2026-07-26", dueDate: "2026-07-30", sortOrder: 4, assigneeIds: ["m-tanaka"] },
   { id: "t2-5", projectId: "p2", parentTaskId: null, title: "本番リリース・運用サポート", status: "todo", priority: "high", progress: 0, startDate: "2026-07-30", dueDate: "2026-08-02", sortOrder: 5, assigneeIds: ["m-sato"] },
 
   // --- p3 基幹システム刷新 (30%) ---
   { id: "t3-1", projectId: "p3", parentTaskId: null, title: "要件定義・RFP作成", status: "done", priority: "high", progress: 100, startDate: "2026-06-28", dueDate: "2026-07-08", sortOrder: 1, assigneeIds: ["m-yamada"] },
   { id: "t3-2", projectId: "p3", parentTaskId: null, title: "ベンダー選定", status: "in_progress", priority: "medium", progress: 60, startDate: "2026-07-08", dueDate: "2026-07-20", sortOrder: 2, assigneeIds: ["m-suzuki"] },
-  { id: "t3-3", projectId: "p3", parentTaskId: null, title: "設計・開発", status: "in_progress", priority: "high", progress: 10, startDate: "2026-07-20", dueDate: "2026-08-06", sortOrder: 3, assigneeIds: ["m-tanaka"] },
+  { id: "t3-3", projectId: "p3", parentTaskId: null, title: "設計・開発", status: "todo", priority: "high", progress: 0, startDate: "2026-07-20", dueDate: "2026-08-06", sortOrder: 3, assigneeIds: ["m-tanaka"] },
   { id: "t3-4", projectId: "p3", parentTaskId: null, title: "テスト・受入検証", status: "todo", priority: "medium", progress: 0, startDate: "2026-08-06", dueDate: "2026-08-13", sortOrder: 4, assigneeIds: ["m-sato"] },
   { id: "t3-5", projectId: "p3", parentTaskId: null, title: "移行・本番切替", status: "todo", priority: "high", progress: 0, startDate: "2026-08-13", dueDate: "2026-08-20", sortOrder: 5, assigneeIds: ["m-yamada"] },
 
@@ -103,7 +102,7 @@ const seed: TaskSeed[] = [
   // --- p5 社内業務効率化 (55%) ---
   { id: "t5-1", projectId: "p5", parentTaskId: null, title: "課題洗い出し・優先順位付け", status: "done", priority: "medium", progress: 100, startDate: "2026-06-28", dueDate: "2026-07-05", sortOrder: 1, assigneeIds: ["m-suzuki"] },
   { id: "t5-2", projectId: "p5", parentTaskId: null, title: "ツール選定", status: "in_progress", priority: "medium", progress: 60, startDate: "2026-07-05", dueDate: "2026-07-19", sortOrder: 2, assigneeIds: ["m-tanaka"] },
-  { id: "t5-3", projectId: "p5", parentTaskId: null, title: "運用設計・ルール整備", status: "in_progress", priority: "medium", progress: 30, startDate: "2026-07-19", dueDate: "2026-07-30", sortOrder: 3, assigneeIds: ["m-yamada"] },
+  { id: "t5-3", projectId: "p5", parentTaskId: null, title: "運用設計・ルール整備", status: "todo", priority: "medium", progress: 0, startDate: "2026-07-19", dueDate: "2026-07-30", sortOrder: 3, assigneeIds: ["m-yamada"] },
   { id: "t5-4", projectId: "p5", parentTaskId: null, title: "トレーニング・展開", status: "todo", priority: "low", progress: 0, startDate: "2026-07-30", dueDate: "2026-08-10", sortOrder: 4, assigneeIds: ["m-sato"] },
 ];
 
@@ -116,12 +115,16 @@ export const tasks: Task[] = seed.map((t, i) => ({
 
 /* ===== タスク担当者 (多対多) は Task.assigneeIds に内包 ===== */
 
-/* ===== マイルストーン ===== */
+/*
+ * ===== マイルストーン =====
+ * 注意: タスク側の isMilestone と二重管理しない (t1-3「要件定義レビュー」は
+ * タスク側で管理するためここには置かない)。
+ * 命名は「〜フェーズ完了」等、ステータスの「完了」と誤読されない形にする。
+ */
 export const milestones: Milestone[] = [
-  { id: "ms-1", projectId: "p1", title: "要件定義レビュー", dueDate: "2026-07-16", isDone: false },
-  { id: "ms-2", projectId: "p2", title: "業務フロー・設計 完了", dueDate: "2026-07-17", isDone: false },
+  { id: "ms-2", projectId: "p2", title: "CRM業務フロー設計 フェーズ完了", dueDate: "2026-07-17", isDone: false },
   { id: "ms-3", projectId: "p3", title: "設計・開発 フェーズ完了", dueDate: "2026-07-20", isDone: false },
-  { id: "ms-4", projectId: "p4", title: "コーディング・実装 完了", dueDate: "2026-07-23", isDone: false },
+  { id: "ms-4", projectId: "p4", title: "コーディング・実装 フェーズ完了", dueDate: "2026-07-23", isDone: false },
   { id: "ms-5", projectId: "p2", title: "テスト・ユーザー検証 開始", dueDate: "2026-07-30", isDone: false },
 ];
 
@@ -155,20 +158,15 @@ export const actions: ActionItem[] = [
   { id: "a5", projectId: "p3", title: "DB設計レビューのMTG設定", dueDate: "2026-07-21", isDone: false },
 ];
 
-/* ===== 通知 ===== */
+/*
+ * ===== 通知 =====
+ * 実在するタスク/マイルストーンだけを参照する (KPI と矛盾する通知を作らない)。
+ */
 export const notifications: AppNotification[] = [
-  { id: "n1", type: "overdue", title: "期限超過のタスクがあります", body: "「最終校正」の期限が過ぎています", link: "/todo", isRead: false, createdAt: "2026-07-16T09:00:00+09:00" },
-  { id: "n2", type: "due_soon", title: "本日が期限のタスク", body: "「要件定義書作成」は本日が期限です", link: "/todo", isRead: false, createdAt: "2026-07-16T08:30:00+09:00" },
-  { id: "n3", type: "due_soon", title: "マイルストーン接近", body: "「要件定義レビュー」が4日後に予定されています", link: "/gantt", isRead: false, createdAt: "2026-07-16T08:00:00+09:00" },
+  { id: "n1", type: "due_soon", title: "期限が近いタスク", body: "「業務フロー設計」の期限は 7/12 です", link: "/todo?due=week", isRead: false, createdAt: "2026-07-04T09:00:00+09:00" },
+  { id: "n2", type: "due_soon", title: "期限が近いタスク", body: "「デザイン制作」の期限は 7/14 です", link: "/todo?due=week", isRead: false, createdAt: "2026-07-04T08:30:00+09:00" },
+  { id: "n3", type: "due_soon", title: "マイルストーン接近", body: "「CRM業務フロー設計 フェーズ完了」が 7/17 に予定されています", link: "/gantt", isRead: false, createdAt: "2026-07-03T08:00:00+09:00" },
 ];
-
-/* ===== ダッシュボード KPI (デモ固定値: テーブルはページングされる前提) ===== */
-export const dashboardKpi: DashboardKpi = {
-  activeProjects: 12,
-  totalTasks: 120,
-  doneTasks: 86,
-  overdueTasks: 2,
-};
 
 /* ===== ドキュメント ===== */
 export const documents: DocumentItem[] = [
@@ -186,7 +184,7 @@ export const documents: DocumentItem[] = [
     template: "meeting",
     title: "キックオフ議事録",
     updatedAt: "2026-07-08",
-    body: "# キックオフ議事録\n\n- 日時: 2025/05/08 10:00-11:30\n- 参加者: 山田、佐藤、鈴木\n\n## 決定事項\n1. 週次定例は毎週月曜 10:00\n2. 要件定義は 5/20 までに完了",
+    body: "# キックオフ議事録\n\n- 日時: 2026/06/29 10:00-11:30\n- 参加者: 後藤、佐藤、鈴木\n\n## 決定事項\n1. 週次定例は毎週月曜 10:00\n2. 現状分析・要件定義は 7/2 までに完了",
   },
   {
     id: "doc3",
@@ -247,7 +245,7 @@ export const clients: ClientCompany[] = [
       { id: "ct2", clientId: "c1", name: "井上 沙織", role: "業務改革PM", email: "inoue@example.com", phone: "03-0000-1102" },
     ],
     interactions: [
-      { id: "ci1", clientId: "c1", date: "2026-07-15", channel: "meeting", summary: "要件定義レビュー。受発注領域の例外処理を次回までに整理。", nextAction: "5/20に業務フロー案を再提示" },
+      { id: "ci1", clientId: "c1", date: "2026-07-01", channel: "meeting", summary: "現状分析の共有。受発注領域の例外処理を次回までに整理。", nextAction: "7/10に業務フロー案を提示" },
       { id: "ci2", clientId: "c1", date: "2026-07-10", channel: "email", summary: "現行システムの権限一覧を受領。", nextAction: "権限棚卸し表に反映" },
     ],
   },
@@ -310,7 +308,7 @@ export const timeEntries: TimeEntry[] = [
 
 /* ===== 請求・売上 ===== */
 export const billingRecords: BillingRecord[] = [
-  { id: "b1", projectId: "p1", contractAmount: 1800000, invoicedAmount: 900000, directCost: 420000, dueDate: "2026-07-31", closingReminder: "5月末締め。要件定義完了分を請求対象に含める。" },
+  { id: "b1", projectId: "p1", contractAmount: 1800000, invoicedAmount: 900000, directCost: 420000, dueDate: "2026-07-31", closingReminder: "7月末締め。要件定義完了分を請求対象に含める。" },
   { id: "b2", projectId: "p2", contractAmount: 1200000, invoicedAmount: 300000, directCost: 260000, dueDate: "2026-07-31", closingReminder: "設計フェーズ完了時に中間請求。" },
   { id: "b3", projectId: "p3", contractAmount: 2400000, invoicedAmount: 0, directCost: 760000, dueDate: "2026-08-30", closingReminder: "RFP確定後に初回請求。" },
   { id: "b4", projectId: "p4", contractAmount: 650000, invoicedAmount: 325000, directCost: 140000, dueDate: "2026-07-31", closingReminder: "公開前検収で残額請求。" },
@@ -335,12 +333,12 @@ export const noteSections: NoteSection[] = [
 
 /* ===== メモ (ページ) ===== */
 export const notes: Note[] = [
-  { id: "note1", sectionId: "sec-work", title: "今週やること", body: "・要件定義レビュー準備\n・CRM提案書を仕上げる\n・請求書を送付\n\n優先度高: 要件定義レビュー（5/16）", color: "#FEF3C7", isPinned: true, updatedAt: "2026-07-16" },
-  { id: "note5", sectionId: "sec-work", title: "請求まわり", body: "5月分の請求は月末締め。\n完了案件として計上する案件を整理する。", color: "#F1F5F9", isPinned: false, updatedAt: "2026-07-12" },
+  { id: "note1", sectionId: "sec-work", title: "今週やること", body: "・要件定義レビュー準備\n・CRM提案書を仕上げる\n・請求書を送付\n\n優先度高: 要件定義レビュー（7/15）", color: "#FEF3C7", isPinned: true, updatedAt: "2026-07-03" },
+  { id: "note5", sectionId: "sec-work", title: "請求まわり", body: "7月分の請求は月末締め。\n完了案件として計上する案件を整理する。", color: "#F1F5F9", isPinned: false, updatedAt: "2026-07-02" },
   { id: "note3", sectionId: "sec-ideas", title: "改善アイデア", body: "ダッシュボードに稼働率の推移グラフを追加したい。\n\n・週次の稼働率トレンド\n・メンバー別の負荷ヒートマップ", color: "#DCFCE7", isPinned: false, updatedAt: "2026-07-14" },
   { id: "note4", sectionId: "sec-ideas", title: "リサーチメモ", body: "競合のガント実装が分かりやすい。後で調査する。\nドラッグ編集とクリティカルパス表示が参考になりそう。", color: "#FCE7F3", isPinned: false, updatedAt: "2026-07-13" },
-  { id: "note2", sectionId: "sec-clients", title: "グローバルHD 連絡メモ", body: "次回MTGは5/22（木）14:00。\n資料は前日までに共有すること。\n窓口: 経営企画部 田中様", color: "#DBEAFE", isPinned: true, updatedAt: "2026-07-15" },
-  { id: "note6", sectionId: "sec-clients", title: "採用サイト案件", body: "トップのキービジュアルは田中さんが5/24までに準備。\n初稿レビューはオンラインで。", color: "#FFEDD5", isPinned: false, updatedAt: "2026-07-11" },
+  { id: "note2", sectionId: "sec-clients", title: "グローバルHD 連絡メモ", body: "次回MTGは7/9（木）14:00。\n資料は前日までに共有すること。\n窓口: 経営企画部 田中様", color: "#DBEAFE", isPinned: true, updatedAt: "2026-07-02" },
+  { id: "note6", sectionId: "sec-clients", title: "採用サイト案件", body: "トップのキービジュアルは田中さんが7/24までに準備。\n初稿レビューはオンラインで。", color: "#FFEDD5", isPinned: false, updatedAt: "2026-07-01" },
   { id: "note7", sectionId: "sec-personal", title: "読みたい本・記事", body: "・プロジェクトマネジメントの教科書\n・SaaS グロースの記事まとめ", color: "#FEF9C3", isPinned: false, updatedAt: "2026-07-10" },
 ];
 

@@ -32,7 +32,6 @@ import {
   boardColumns,
   billingRecords,
   clients,
-  dashboardKpi,
   dependencies,
   documents,
   files,
@@ -48,7 +47,69 @@ import {
   timeEntries,
 } from "./data";
 
-const delay = () => new Promise((r) => setTimeout(r, 0));
+/* ==================================================
+   ローカル永続化 (フェーズ1.5)
+   モックデータへの変更 (タスク追加/削除/編集、ガント操作等) を
+   localStorage に保存し、次回起動時に復元する。
+   キーのバージョンを上げると保存データを破棄して新しいシードで起動する。
+   フェーズ2 (Supabase) 導入時にこの層ごと差し替える。
+================================================== */
+const STORAGE_KEY = "promanage-mock-v2";
+
+const PERSISTED_COLLECTIONS: Record<string, unknown[]> = {
+  tasks,
+  projects,
+  milestones,
+  dependencies,
+  actions,
+  notifications,
+  documents,
+  files,
+  notes,
+  timeEntries,
+  billingRecords,
+  projectActivities,
+  clients,
+};
+
+let hydrated = false;
+function hydrate() {
+  if (hydrated || typeof window === "undefined") return;
+  hydrated = true;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw) as Record<string, unknown[]>;
+    for (const [name, arr] of Object.entries(PERSISTED_COLLECTIONS)) {
+      const data = saved[name];
+      // 参照を維持したまま中身を入れ替える (モジュール内 mutate 前提のため)
+      if (Array.isArray(data)) arr.splice(0, arr.length, ...data);
+    }
+  } catch {
+    // 壊れた保存データは無視して初期シードで起動する
+  }
+}
+
+let persistTimer: ReturnType<typeof setTimeout> | null = null;
+function schedulePersist() {
+  if (typeof window === "undefined") return;
+  if (persistTimer) clearTimeout(persistTimer);
+  // リポジトリ呼び出し (mutate 含む) の完了後にまとめて保存する
+  persistTimer = setTimeout(() => {
+    persistTimer = null;
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(PERSISTED_COLLECTIONS));
+    } catch {
+      // 容量超過等は無視 (次回の保存で再試行される)
+    }
+  }, 150);
+}
+
+const delay = () => {
+  hydrate();
+  schedulePersist();
+  return new Promise((r) => setTimeout(r, 0));
+};
 
 /* ===== Members ===== */
 export async function listMembers(): Promise<Member[]> {
@@ -216,10 +277,20 @@ export async function listMilestones(): Promise<Milestone[]> {
   return [...milestones].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 }
 
-/* ===== Dashboard KPI ===== */
+/* ===== Dashboard KPI (固定値ではなく実データから算出する) ===== */
 export async function getDashboardKpi(): Promise<DashboardKpi> {
   await delay();
-  return dashboardKpi;
+  const real = tasks.filter((t) => !t.isMilestone);
+  return {
+    activeProjects: projects.filter(
+      (p) => p.status === "in_progress" || p.status === "final_check",
+    ).length,
+    totalTasks: real.length,
+    doneTasks: real.filter((t) => t.status === "done").length,
+    overdueTasks: real.filter(
+      (t) => t.dueDate && daysUntil(t.dueDate) < 0 && t.status !== "done",
+    ).length,
+  };
 }
 export function getKpiSeries() {
   return kpiSeries;
