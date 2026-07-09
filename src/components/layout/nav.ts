@@ -2,6 +2,7 @@ import {
   BarChart3,
   Blocks,
   Briefcase,
+  Network,
   CircleDollarSign,
   FileText,
   Home,
@@ -41,6 +42,7 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "案件",
     items: [
       { label: "担当案件", href: "/projects", icon: Briefcase },
+      { label: "Issue Tree", href: "/issue-tree", icon: Network },
       { label: "請求・売上", href: "/billing", icon: CircleDollarSign },
     ],
   },

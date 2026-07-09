@@ -26,7 +26,17 @@ import type {
   Task,
   TimeEntry,
 } from "@/types/domain";
-import type { DocumentItem, FileItem, Note, NoteSection } from "@/types/domain";
+import type {
+  DocumentItem,
+  FileItem,
+  IssueBoard,
+  IssueNode,
+  IssueNodeStatus,
+  IssueTreeKind,
+  Note,
+  NoteSection,
+  Priority,
+} from "@/types/domain";
 import {
   actions,
   boardColumns,
@@ -35,6 +45,8 @@ import {
   dependencies,
   documents,
   files,
+  issueBoards,
+  issueNodes,
   kpiSeries,
   members,
   milestones,
@@ -70,6 +82,8 @@ const PERSISTED_COLLECTIONS: Record<string, unknown[]> = {
   billingRecords,
   projectActivities,
   clients,
+  issueBoards,
+  issueNodes,
 };
 
 let hydrated = false;
@@ -729,6 +743,161 @@ export async function deleteTask(id: string): Promise<void> {
       dependencies.splice(k, 1);
     }
   }
+}
+
+/* ==================================================
+   Issue Tree (論点ツリー)
+   フェーズ2では issue_boards / issue_nodes テーブルへ差し替える
+   (docs/07_issue_tree.md 参照)。関数シグネチャは維持する。
+================================================== */
+
+const todayISO = () => new Date().toISOString().slice(0, 10);
+
+export interface IssueBoardSummary extends IssueBoard {
+  nodeCount: number;
+  validatingCount: number;
+  actionizedCount: number;
+}
+
+export async function listIssueBoardSummaries(): Promise<IssueBoardSummary[]> {
+  await delay();
+  return issueBoards
+    .map((b) => {
+      const nodes = issueNodes.filter((n) => n.boardId === b.id);
+      return {
+        ...b,
+        nodeCount: nodes.length,
+        validatingCount: nodes.filter((n) => n.status === "validating").length,
+        actionizedCount: nodes.filter((n) => n.status === "actionized").length,
+      };
+    })
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+export async function createIssueBoard(init: {
+  clientName: string;
+  name: string;
+  category: string;
+  objective?: string;
+  kpi?: string;
+  projectId?: string | null;
+}): Promise<IssueBoard> {
+  await delay();
+  const board: IssueBoard = {
+    id: `ib-${Date.now()}`,
+    clientName: init.clientName.trim() || "未設定クライアント",
+    projectId: init.projectId ?? null,
+    name: init.name.trim() || "無題の案件",
+    category: init.category.trim() || "その他",
+    objective: init.objective ?? "",
+    kpi: init.kpi ?? "",
+    updatedAt: todayISO(),
+  };
+  issueBoards.unshift(board);
+  return board;
+}
+
+export async function updateIssueBoard(
+  id: string,
+  patch: Partial<Pick<IssueBoard, "clientName" | "name" | "category" | "objective" | "kpi" | "projectId">>,
+): Promise<void> {
+  await delay();
+  const b = issueBoards.find((x) => x.id === id);
+  if (!b) return;
+  Object.assign(b, patch);
+  b.updatedAt = todayISO();
+}
+
+export async function deleteIssueBoard(id: string): Promise<void> {
+  await delay();
+  for (let i = issueNodes.length - 1; i >= 0; i--) {
+    if (issueNodes[i].boardId === id) issueNodes.splice(i, 1);
+  }
+  const bi = issueBoards.findIndex((b) => b.id === id);
+  if (bi >= 0) issueBoards.splice(bi, 1);
+}
+
+function touchBoard(boardId: string) {
+  const b = issueBoards.find((x) => x.id === boardId);
+  if (b) b.updatedAt = todayISO();
+}
+
+export async function listIssueNodes(boardId: string): Promise<IssueNode[]> {
+  await delay();
+  return issueNodes
+    .filter((n) => n.boardId === boardId)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+export async function createIssueNode(init: {
+  boardId: string;
+  treeKind: IssueTreeKind;
+  parentId: string | null;
+  title: string;
+}): Promise<IssueNode> {
+  await delay();
+  const siblings = issueNodes.filter(
+    (n) =>
+      n.boardId === init.boardId &&
+      n.treeKind === init.treeKind &&
+      n.parentId === init.parentId,
+  );
+  const node: IssueNode = {
+    id: `in-${Date.now()}`,
+    boardId: init.boardId,
+    treeKind: init.treeKind,
+    parentId: init.parentId,
+    title: init.title.trim() || "新しい論点",
+    hypothesis: "",
+    evidence: "",
+    dataNeeded: "",
+    method: "",
+    status: "unverified",
+    priority: "medium",
+    sortOrder: siblings.length + 1,
+    createdTaskId: null,
+    updatedAt: todayISO(),
+  };
+  issueNodes.push(node);
+  touchBoard(init.boardId);
+  return node;
+}
+
+export type IssueNodePatch = Partial<
+  Pick<
+    IssueNode,
+    "title" | "hypothesis" | "evidence" | "dataNeeded" | "method" | "createdTaskId" | "parentId"
+  > & { status: IssueNodeStatus; priority: Priority }
+>;
+
+export async function updateIssueNode(id: string, patch: IssueNodePatch): Promise<void> {
+  await delay();
+  const n = issueNodes.find((x) => x.id === id);
+  if (!n) return;
+  Object.assign(n, patch);
+  n.updatedAt = todayISO();
+  touchBoard(n.boardId);
+}
+
+/** ノードと配下の子孫をまとめて削除 */
+export async function deleteIssueNode(id: string): Promise<void> {
+  await delay();
+  const target = issueNodes.find((n) => n.id === id);
+  const toDelete = new Set<string>([id]);
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const n of issueNodes) {
+      if (n.parentId && toDelete.has(n.parentId) && !toDelete.has(n.id)) {
+        toDelete.add(n.id);
+        grew = true;
+      }
+    }
+  }
+  for (let i = issueNodes.length - 1; i >= 0; i--) {
+    if (toDelete.has(issueNodes[i].id)) issueNodes.splice(i, 1);
+  }
+  if (target) touchBoard(target.boardId);
 }
 
 export async function deleteProject(id: string): Promise<void> {

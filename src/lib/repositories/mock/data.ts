@@ -11,6 +11,8 @@ import type {
   ClientCompany,
   DocumentItem,
   FileItem,
+  IssueBoard,
+  IssueNode,
   Member,
   Milestone,
   Note,
@@ -340,6 +342,52 @@ export const notes: Note[] = [
   { id: "note2", sectionId: "sec-clients", title: "グローバルHD 連絡メモ", body: "次回MTGは7/9（木）14:00。\n資料は前日までに共有すること。\n窓口: 経営企画部 田中様", color: "#DBEAFE", isPinned: true, updatedAt: "2026-07-02" },
   { id: "note6", sectionId: "sec-clients", title: "採用サイト案件", body: "トップのキービジュアルは田中さんが7/24までに準備。\n初稿レビューはオンラインで。", color: "#FFEDD5", isPinned: false, updatedAt: "2026-07-01" },
   { id: "note7", sectionId: "sec-personal", title: "読みたい本・記事", body: "・プロジェクトマネジメントの教科書\n・SaaS グロースの記事まとめ", color: "#FEF9C3", isPinned: false, updatedAt: "2026-07-10" },
+];
+
+/* ===== Issue Tree: 論点ボード ===== */
+export const issueBoards: IssueBoard[] = [
+  {
+    id: "ib-1",
+    clientName: "クリエイトデザイン合同会社",
+    projectId: "p4",
+    name: "補助金LP CVR改善",
+    category: "Webマーケ",
+    objective: "補助金申請LPのCVRを2.1%→4.0%へ引き上げる",
+    kpi: "CVR / フォーム完了率 / CPA",
+    updatedAt: "2026-07-08",
+  },
+  {
+    id: "ib-2",
+    clientName: "フューチャーリンク株式会社",
+    projectId: "p2",
+    name: "営業プロセス業務改善",
+    category: "業務改善",
+    objective: "CRM導入に合わせて営業リードタイムを30%短縮する",
+    kpi: "リードタイム / 商談化率 / 入力工数",
+    updatedAt: "2026-07-07",
+  },
+];
+
+/* ===== Issue Tree: ノード ===== */
+export const issueNodes: IssueNode[] = [
+  // --- ib-1 論点ツリー ---
+  { id: "in-1", boardId: "ib-1", treeKind: "issue", parentId: null, title: "なぜCVRが2.1%に留まっているのか", hypothesis: "流入の質ではなくLP内の離脱が主因", evidence: "広告CTRは業界平均以上。LP直帰率68%", dataNeeded: "GA4ファネル / Clarityヒートマップ", method: "ファネル分析で離脱ポイントを特定", status: "validating", priority: "high", sortOrder: 1, createdTaskId: null, updatedAt: "2026-07-08" },
+  { id: "in-2", boardId: "ib-1", treeKind: "issue", parentId: "in-1", title: "FVで価値が伝わっていないのでは", hypothesis: "FV離脱率が高く、補助金額の訴求が弱い", evidence: "スクロール到達率40%", dataNeeded: "Clarityスクロールマップ", method: "FVコピーABテスト", status: "supported", priority: "high", sortOrder: 1, createdTaskId: null, updatedAt: "2026-07-08" },
+  { id: "in-3", boardId: "ib-1", treeKind: "issue", parentId: "in-1", title: "フォームが長すぎるのでは", hypothesis: "項目12個が完了率を下げている", evidence: "フォーム開始→完了 31%", dataNeeded: "項目別離脱データ", method: "項目5個への削減テスト", status: "validating", priority: "medium", sortOrder: 2, createdTaskId: null, updatedAt: "2026-07-07" },
+  { id: "in-4", boardId: "ib-1", treeKind: "issue", parentId: "in-1", title: "信頼要素が不足しているのでは", hypothesis: "実績・事例の提示で不安を解消できる", evidence: "", dataNeeded: "競合LPの信頼要素比較", method: "採択実績セクション追加の前後比較", status: "unverified", priority: "medium", sortOrder: 3, createdTaskId: null, updatedAt: "2026-07-06" },
+  { id: "in-5", boardId: "ib-1", treeKind: "issue", parentId: "in-2", title: "補助金額を数字で見せるべきか", hypothesis: "「最大250万円」の明示でFV突破率が上がる", evidence: "ヒートマップで金額表記への注視を確認", dataNeeded: "ABテスト結果", method: "コピー2案のABテスト", status: "actionized", priority: "high", sortOrder: 1, createdTaskId: null, updatedAt: "2026-07-08" },
+  // --- ib-1 KPIツリー ---
+  { id: "in-6", boardId: "ib-1", treeKind: "kpi", parentId: null, title: "CVR 4.0%", hypothesis: "", evidence: "", dataNeeded: "GA4", method: "", status: "validating", priority: "high", sortOrder: 1, createdTaskId: null, updatedAt: "2026-07-05" },
+  { id: "in-7", boardId: "ib-1", treeKind: "kpi", parentId: "in-6", title: "フォーム到達率 55%", hypothesis: "", evidence: "", dataNeeded: "GA4イベント", method: "", status: "unverified", priority: "medium", sortOrder: 1, createdTaskId: null, updatedAt: "2026-07-05" },
+  { id: "in-8", boardId: "ib-1", treeKind: "kpi", parentId: "in-6", title: "フォーム完了率 60%", hypothesis: "", evidence: "", dataNeeded: "GA4イベント", method: "", status: "unverified", priority: "medium", sortOrder: 2, createdTaskId: null, updatedAt: "2026-07-05" },
+  // --- ib-2 論点ツリー ---
+  { id: "in-9", boardId: "ib-2", treeKind: "issue", parentId: null, title: "なぜ商談化までのリードタイムが長いのか", hypothesis: "情報の分散と手入力の多さがボトルネック", evidence: "リード対応まで平均2.5営業日", dataNeeded: "現行フローの工数実測", method: "業務フロー可視化ワークショップ", status: "validating", priority: "high", sortOrder: 1, createdTaskId: null, updatedAt: "2026-07-07" },
+  { id: "in-10", boardId: "ib-2", treeKind: "issue", parentId: "in-9", title: "リード情報の転記作業が多いのでは", hypothesis: "フォーム→Excel→CRMの三重入力が発生", evidence: "ヒアリングで週5時間の転記を確認", dataNeeded: "作業ログ", method: "CRM自動連携の効果試算", status: "supported", priority: "high", sortOrder: 1, createdTaskId: null, updatedAt: "2026-07-07" },
+  { id: "in-11", boardId: "ib-2", treeKind: "issue", parentId: "in-9", title: "担当割り当てルールが曖昧なのでは", hypothesis: "割り当て待ちで平均1営業日滞留", evidence: "", dataNeeded: "対応開始までの時間分布", method: "自動割り当てルールの設計・検証", status: "unverified", priority: "medium", sortOrder: 2, createdTaskId: null, updatedAt: "2026-07-06" },
+  // --- ib-2 業務プロセスツリー ---
+  { id: "in-12", boardId: "ib-2", treeKind: "process", parentId: null, title: "リード獲得〜商談化プロセス", hypothesis: "", evidence: "", dataNeeded: "", method: "", status: "validating", priority: "medium", sortOrder: 1, createdTaskId: null, updatedAt: "2026-07-06" },
+  { id: "in-13", boardId: "ib-2", treeKind: "process", parentId: "in-12", title: "問い合わせ受付 (フォーム/電話)", hypothesis: "", evidence: "", dataNeeded: "", method: "", status: "unverified", priority: "low", sortOrder: 1, createdTaskId: null, updatedAt: "2026-07-06" },
+  { id: "in-14", boardId: "ib-2", treeKind: "process", parentId: "in-12", title: "CRM登録・担当割り当て", hypothesis: "", evidence: "", dataNeeded: "", method: "", status: "validating", priority: "medium", sortOrder: 2, createdTaskId: null, updatedAt: "2026-07-06" },
 ];
 
 /** KPI のスパークライン用ダミー系列 */
