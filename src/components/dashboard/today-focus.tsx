@@ -49,7 +49,24 @@ export function TodayFocusCard() {
   const remain = focus.dueDate ? daysUntil(focus.dueDate) : null;
 
   return (
-    <div className="glass-card rounded-2xl p-6 h-full flex flex-col">
+    <div className="glass-card relative overflow-hidden rounded-2xl p-6 h-full flex flex-col">
+      {/* 液体ガラスの光だまり (装飾。blur は使わずグラデーションのみ) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle at 32% 32%, rgba(111,156,245,0.22) 0%, rgba(139,92,246,0.1) 52%, transparent 74%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-28 -left-14 size-80 rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle at 60% 40%, rgba(56,189,248,0.16) 0%, transparent 70%)",
+        }}
+      />
       <div className="flex items-center justify-between gap-3">
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600">
           <Target className="size-3.5" />
@@ -70,7 +87,9 @@ export function TodayFocusCard() {
           </span>
         )}
       </div>
-      <h3 className="mt-2 text-lg font-bold text-ink leading-snug">{focus.title}</h3>
+      <h3 className="mt-2 text-[22px] font-bold text-ink leading-snug tracking-tight">
+        {focus.title}
+      </h3>
       {project && (
         <p className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-ink-soft">
           <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: project.color }} />

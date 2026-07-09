@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { PageHeader } from "@/components/shared/page-header";
 import { TodayFocusCard } from "@/components/dashboard/today-focus";
 import { SpotlightGrid } from "@/components/dashboard/spotlight-grid";
 import { UpcomingList } from "@/components/dashboard/upcoming-list";
@@ -17,11 +16,7 @@ export default async function TodoPage({
   const initialTab = (tab as TaskTab) ?? "mine";
   return (
     <>
-      <PageHeader
-        title="ホーム"
-        subtitle="今日のタスクとプロジェクトの進捗を一覧で確認"
-      />
-
+      {/* ホームはページタイトルを置かず、コンテンツ (今日の判断材料) から始める */}
       <div className="space-y-5">
         {/* 行A: 今日のフォーカス (2/3) + KPI (1/3) — 「今日何をすべきか」に最短で答える */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">

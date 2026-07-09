@@ -1,7 +1,6 @@
 "use client";
 
-import { Activity, AlertTriangle, CheckCircle2, Flag, type LucideIcon } from "lucide-react";
-import { Donut } from "@/components/shared/charts";
+import { Activity, AlertTriangle, Flag, type LucideIcon } from "lucide-react";
 import { useMilestones, useTasks } from "@/lib/queries/hooks";
 import { daysUntil } from "@/lib/date";
 
@@ -65,8 +64,6 @@ export function GanttKpiRow() {
   const overdue = list.filter(
     (t) => t.dueDate && daysUntil(t.dueDate) < 0 && t.status !== "done",
   ).length;
-  const done = list.filter((t) => t.status === "done").length;
-  const doneRate = total > 0 ? Math.round((done / total) * 100) : 0;
   const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
   const weekMilestones = (milestones ?? []).filter((m) => {
     if (m.isDone) return false;
@@ -75,7 +72,7 @@ export function GanttKpiRow() {
   }).length;
 
   return (
-    <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <CompactKpi
         icon={Activity}
         iconColor="#2563EB"
@@ -100,24 +97,6 @@ export function GanttKpiRow() {
         label="今週のマイルストーン"
         value={weekMilestones}
         sub="完了予定"
-      />
-      <CompactKpi
-        icon={CheckCircle2}
-        iconColor="#0F766E"
-        iconBg="#CCFBF1"
-        label="タスク完了率"
-        value={`${doneRate}%`}
-        sub={`完了 ${done}/${total}`}
-        graph={
-          <Donut
-            size={46}
-            thickness={7}
-            slices={[
-              { label: "完了", value: doneRate, color: "#14B8A6" },
-              { label: "未完了", value: 100 - doneRate, color: "#E8EDF3" },
-            ]}
-          />
-        }
       />
     </div>
   );
