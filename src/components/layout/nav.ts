@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Blocks,
   Briefcase,
   CircleDollarSign,
   FileText,
@@ -49,5 +50,9 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "ドキュメント", href: "/documents", icon: FileText },
       { label: "メモ", href: "/notes", icon: StickyNote },
     ],
+  },
+  {
+    label: "その他",
+    items: [{ label: "その他ツール", href: "/tools", icon: Blocks }],
   },
 ];
