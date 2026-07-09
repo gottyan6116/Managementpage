@@ -426,6 +426,56 @@ body {
   scrollbar-width: none;
 }
 
+/*
+  ドキュメント本文の contentEditable。Markdown 記号を見せず、
+  見出し/箇条書き/太字を通常の文章としてそのまま表示する。
+*/
+.doc-editable:empty::before,
+.doc-editable p:only-child:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-ink-muted);
+  pointer-events: none;
+}
+.doc-editable h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 0.5rem 0 0.75rem;
+}
+.doc-editable h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 1.1rem 0 0.5rem;
+}
+.doc-editable h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin: 0.9rem 0 0.4rem;
+}
+.doc-editable p {
+  margin: 0.35rem 0;
+}
+.doc-editable ul,
+.doc-editable ol {
+  margin: 0.5rem 0;
+  padding-left: 1.4rem;
+}
+.doc-editable ul {
+  list-style: disc;
+}
+.doc-editable ol {
+  list-style: decimal;
+}
+.doc-editable li {
+  margin: 0.2rem 0;
+}
+.doc-editable strong {
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
 @keyframes toast-shrink {
   from {
     width: 100%;
