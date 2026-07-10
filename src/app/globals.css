@@ -547,6 +547,42 @@ body {
   color: var(--color-ink);
 }
 
+/*
+  Issue Tree マップ表示のコネクタ線。
+  幹 (::after 縦線) と枝 (::before 横線) で親子を接続する。
+*/
+.itree-child {
+  position: relative;
+  padding-left: 28px;
+}
+.itree-child::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 28px;
+  height: 1px;
+  background: var(--color-line);
+}
+.itree-child::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-line);
+}
+.itree-child:first-child::after {
+  top: 50%;
+}
+.itree-child:last-child::after {
+  bottom: 50%;
+}
+.itree-child:only-child::after {
+  display: none;
+}
+
 @keyframes toast-shrink {
   from {
     width: 100%;

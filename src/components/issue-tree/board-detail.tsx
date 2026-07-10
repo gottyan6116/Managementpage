@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Target, X } from "lucide-react";
+import { List, Network, Target, X } from "lucide-react";
 import { useCreateIssueNode, useDeleteIssueNode, useIssueNodes } from "@/lib/queries/hooks";
 import { TREE_KINDS } from "@/lib/issue-tree";
 import { IssueTreeView } from "./tree-view";
+import { IssueTreeMap } from "./tree-map";
 import { NodeDetailPanel } from "./node-detail-panel";
 import { cn } from "@/lib/utils";
 import type { IssueBoardSummary } from "@/lib/repositories";
@@ -24,6 +25,8 @@ export function IssueBoardDetail({
   const deleteNode = useDeleteIssueNode(board.id);
   const [treeKind, setTreeKind] = useState<IssueTreeKind>("issue");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // マップ = ロジックツリー型の俯瞰 (既定) / リスト = 高速編集向け
+  const [viewMode, setViewMode] = useState<"map" | "list">("map");
 
   const selected = useMemo(
     () => nodes?.find((n) => n.id === selectedId) ?? null,
@@ -117,12 +120,13 @@ export function IssueBoardDetail({
           </button>
         </div>
 
-        {/* タブ */}
-        <div
-          role="tablist"
-          aria-label="ツリーの種類"
-          className="shrink-0 flex items-center gap-1 px-4 sm:px-6 pt-3 overflow-x-auto no-scrollbar"
-        >
+        {/* タブ + ビュー切替 */}
+        <div className="shrink-0 flex items-end justify-between gap-3 px-4 sm:px-6 pt-3">
+          <div
+            role="tablist"
+            aria-label="ツリーの種類"
+            className="flex items-center gap-1 overflow-x-auto no-scrollbar"
+          >
           {TREE_KINDS.map((t) => {
             const active = treeKind === t.key;
             return (
@@ -149,19 +153,65 @@ export function IssueBoardDetail({
               </button>
             );
           })}
+          </div>
+
+          {/* ビュー切替: マップ (俯瞰) / リスト (高速編集) */}
+          <div className="mb-1.5 inline-flex shrink-0 items-center rounded-lg border border-line bg-surface p-0.5">
+            <button
+              type="button"
+              onClick={() => setViewMode("map")}
+              aria-pressed={viewMode === "map"}
+              title="マップ表示 (ロジックツリー型)"
+              className={cn(
+                "inline-flex items-center gap-1 h-7 rounded-md px-2 text-xs font-medium transition-colors",
+                viewMode === "map"
+                  ? "bg-brand-600 text-white"
+                  : "text-ink-soft hover:bg-surface-muted",
+              )}
+            >
+              <Network className="size-3.5" />
+              <span className="hidden sm:inline">マップ</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              aria-pressed={viewMode === "list"}
+              title="リスト表示"
+              className={cn(
+                "inline-flex items-center gap-1 h-7 rounded-md px-2 text-xs font-medium transition-colors",
+                viewMode === "list"
+                  ? "bg-brand-600 text-white"
+                  : "text-ink-soft hover:bg-surface-muted",
+              )}
+            >
+              <List className="size-3.5" />
+              <span className="hidden sm:inline">リスト</span>
+            </button>
+          </div>
         </div>
 
         {/* 中央: ツリー + 右: ノード詳細 */}
         <div className="flex-1 min-h-0 flex border-t border-line bg-surface">
           <div className="flex-1 min-w-0 overflow-y-auto">
-            <IssueTreeView
-              nodes={nodes ?? []}
-              treeKind={treeKind}
-              selectedId={selectedId}
-              onSelect={(id) => setSelectedId((cur) => (cur === id ? null : id))}
-              onAddChild={addNode}
-              onDelete={removeNode}
-            />
+            {viewMode === "map" ? (
+              <IssueTreeMap
+                nodes={nodes ?? []}
+                treeKind={treeKind}
+                selectedId={selectedId}
+                onSelect={(id) => setSelectedId((cur) => (cur === id ? null : id))}
+                onAddChild={addNode}
+                onDelete={removeNode}
+              />
+            ) : (
+              <IssueTreeView
+                nodes={nodes ?? []}
+                treeKind={treeKind}
+                selectedId={selectedId}
+                onSelect={(id) => setSelectedId((cur) => (cur === id ? null : id))}
+                onAddChild={addNode}
+                onDelete={removeNode}
+              />
+            )}
           </div>
 
           {/* desktop: 右パネル */}
