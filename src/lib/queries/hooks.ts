@@ -12,7 +12,6 @@ import type {
   DocumentItem,
   FileItem,
   GanttRow,
-  IssueTreeKind,
   Note,
   Priority,
   ProjectActivity,
@@ -49,92 +48,7 @@ export const qk = {
   timeEntries: (projectId?: string) => ["time-entries", projectId ?? "all"] as const,
   billing: (projectId?: string) => ["billing", projectId ?? "all"] as const,
   activities: (projectId: string) => ["project-activities", projectId] as const,
-  issueBoards: ["issue-boards"] as const,
-  issueNodes: (boardId: string) => ["issue-nodes", boardId] as const,
 };
-
-/* ===== Issue Tree ===== */
-
-export function useIssueBoardSummaries() {
-  return useQuery({ queryKey: qk.issueBoards, queryFn: repo.listIssueBoardSummaries });
-}
-
-export function useIssueNodes(boardId: string) {
-  return useQuery({
-    queryKey: qk.issueNodes(boardId),
-    queryFn: () => repo.listIssueNodes(boardId),
-  });
-}
-
-export function useCreateIssueBoard() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (init: {
-      clientName: string;
-      name: string;
-      category: string;
-      objective?: string;
-      kpi?: string;
-      projectId?: string | null;
-    }) => repo.createIssueBoard(init),
-    onSettled: () => qc.invalidateQueries({ queryKey: qk.issueBoards }),
-  });
-}
-
-export function useUpdateIssueBoard() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, ...patch }: { id: string } & Parameters<typeof repo.updateIssueBoard>[1]) =>
-      repo.updateIssueBoard(id, patch),
-    onSettled: () => qc.invalidateQueries({ queryKey: qk.issueBoards }),
-  });
-}
-
-export function useDeleteIssueBoard() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => repo.deleteIssueBoard(id),
-    onSettled: () => qc.invalidateQueries({ queryKey: qk.issueBoards }),
-  });
-}
-
-export function useCreateIssueNode(boardId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (init: {
-      treeKind: IssueTreeKind;
-      parentId: string | null;
-      title: string;
-    }) => repo.createIssueNode({ boardId, ...init }),
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: qk.issueNodes(boardId) });
-      qc.invalidateQueries({ queryKey: qk.issueBoards });
-    },
-  });
-}
-
-export function useUpdateIssueNode(boardId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, ...patch }: { id: string } & repo.IssueNodePatch) =>
-      repo.updateIssueNode(id, patch),
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: qk.issueNodes(boardId) });
-      qc.invalidateQueries({ queryKey: qk.issueBoards });
-    },
-  });
-}
-
-export function useDeleteIssueNode(boardId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => repo.deleteIssueNode(id),
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: qk.issueNodes(boardId) });
-      qc.invalidateQueries({ queryKey: qk.issueBoards });
-    },
-  });
-}
 
 export function useMembers() {
   return useQuery({ queryKey: qk.members, queryFn: repo.listMembers });
