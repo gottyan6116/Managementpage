@@ -9,6 +9,8 @@ import {
   Check,
   List,
   Loader2,
+  Maximize2,
+  Minimize2,
   Network,
   Plus,
   Redo2,
@@ -38,6 +40,7 @@ import { ListView } from "./list-view";
 import { FilterPanel } from "./filter-panel";
 import { NodeDetailPanel, ProjectSummaryPanel } from "./detail-panel";
 import { InlineNodeCreator } from "./inline-node-creator";
+import type { IssueFlowActions } from "./flow-actions";
 
 // React Flow は計測済みコンテナ前提のためクライアント側でのみ読み込む
 const FlowCanvas = dynamic(() => import("./flow-canvas"), {
@@ -64,6 +67,7 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
 
   const createNode = useCreateIssueTreeNode(projectId);
   const movePersist = useUpdateIssueTreeNode(projectId, { history: false });
+  const renameNode = useUpdateIssueTreeNode(projectId);
   const deleteNode = useDeleteIssueTreeNode(projectId);
   const { undo, redo, canUndo, canRedo } = useIssueTreeUndoRedo(projectId);
   const pushToast = useToastStore((s) => s.push);
@@ -81,6 +85,9 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
   const setDetailPanelOpen = useIssueTreeStore((s) => s.setDetailPanelOpen);
 
   const [creatorOpen, setCreatorOpen] = useState(false);
+  // ノートPC等の狭い画面で AppShell (サイドバー+ヘッダー+余白) を退避し、
+  // ツリー図解を画面いっぱいに使えるようにするモード。追加/編集/削除は同じ UI のまま。
+  const [fullscreen, setFullscreen] = useState(false);
 
   // プロジェクト切替時に UI 状態を初期化し、URL の ?view= を反映する
   useEffect(() => {
@@ -95,9 +102,13 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
-  // Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y
+  // Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y / Escape (全画面終了)
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && fullscreen) {
+        setFullscreen(false);
+        return;
+      }
       if (!(e.ctrlKey || e.metaKey)) return;
       const target = e.target as HTMLElement | null;
       if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
@@ -113,7 +124,17 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
+  }, [projectId, fullscreen]);
+
+  // 全画面中は背面のスクロールを止める
+  useEffect(() => {
+    if (!fullscreen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [fullscreen]);
 
   const selectedNode = useMemo(
     () => nodes?.find((n) => n.id === selectedNodeId) ?? null,
@@ -139,6 +160,17 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
       { onSuccess: (node) => selectNode(node.id) },
     );
   }
+
+  // キャンバス上のノードカードからの直接操作 (追加/削除/インライン改名)
+  const flowActions: IssueFlowActions = useMemo(
+    () => ({
+      onAddChild: (parentId) => handleCreate(parentId, "新しいノード"),
+      onDelete: (node) => handleRequestDelete(node),
+      onRename: (id, title) => renameNode.mutate({ id, title }),
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activeTreeType, nodes, selectedNodeId],
+  );
 
   /** 削除: 子や連携タスクがあれば確認し、Undo トーストを出す */
   function handleRequestDelete(node: IssueTreeNode) {
@@ -182,7 +214,14 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="flex h-[calc(100vh-7.5rem)] min-h-[540px] flex-col">
+    <div
+      className={cn(
+        "flex flex-col",
+        fullscreen
+          ? "fixed inset-0 z-[60] h-[100dvh] bg-app p-3 sm:p-4"
+          : "h-[calc(100vh-7.5rem)] min-h-[540px]",
+      )}
+    >
       {/* ヘッダー */}
       <div className="mb-3 flex items-center gap-3">
         <Link
@@ -341,6 +380,15 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
 
         {/* 中央 */}
         <div className="relative min-w-0 flex-1">
+          <button
+            type="button"
+            onClick={() => setFullscreen((v) => !v)}
+            aria-label={fullscreen ? "全画面表示を終了" : "画面いっぱいに表示"}
+            title={fullscreen ? "全画面表示を終了 (Esc)" : "画面いっぱいに表示"}
+            className="absolute right-3 top-3 z-20 inline-flex size-9 items-center justify-center rounded-lg border border-line bg-surface text-ink-soft shadow-card hover:bg-surface-muted hover:text-brand-600 transition-colors"
+          >
+            {fullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+          </button>
           {viewMode === "map" ? (
             <FlowCanvas
               nodes={(nodes ?? []).filter((n) => n.treeType === activeTreeType)}
@@ -350,6 +398,7 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
               selectedId={selectedNodeId}
               onSelect={selectNode}
               onMovePersist={({ id, position }) => movePersist.mutate({ id, position })}
+              actions={flowActions}
             />
           ) : (
             <div className="h-full overflow-y-auto">

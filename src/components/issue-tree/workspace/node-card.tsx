@@ -1,8 +1,8 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { Link2 } from "lucide-react";
+import { Link2, Plus, Trash2 } from "lucide-react";
 import {
   NODE_STATUS_META,
   NODE_TYPE_LABEL,
@@ -11,6 +11,7 @@ import {
 import { PRIORITY_LABEL, PRIORITY_STYLE } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import type { IssueFlowNode } from "@/lib/issue-tree/react-flow-adapter";
+import { useIssueFlowActions } from "./flow-actions";
 
 /**
  * キャンバス上のノードカード。
@@ -82,23 +83,110 @@ export function NodeCardBody({
   );
 }
 
-/** React Flow に登録するカスタムノード */
+/** React Flow に登録するカスタムノード (ホバーで追加/削除、ダブルクリックで改名) */
 export const IssueFlowNodeCard = memo(function IssueFlowNodeCard({
   data,
 }: NodeProps<IssueFlowNode>) {
+  const { node, dimmed, selected } = data;
+  const { onAddChild, onDelete, onRename } = useIssueFlowActions();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(node.title);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      const el = inputRef.current;
+      el?.focus();
+      el?.select();
+    }
+  }, [editing]);
+
+  function commitRename() {
+    const next = draft.trim();
+    if (next && next !== node.title) onRename(node.id, next);
+    else setDraft(node.title);
+    setEditing(false);
+  }
+
   return (
-    <>
+    <div className="group relative">
       <Handle
         type="target"
         position={Position.Left}
         className="!size-2 !border-none !bg-[#c7d4e8]"
       />
-      <NodeCardBody node={data.node} dimmed={data.dimmed} selected={data.selected} />
+
+      {editing ? (
+        // インライン改名: Enter=確定 / Shift+Enter=改行 / Escape=取消
+        <div
+          className={cn(
+            "nodrag nopan w-[240px] rounded-xl border bg-surface-solid p-3",
+            "border-brand-400 ring-2 ring-brand-200 shadow-pop",
+          )}
+        >
+          <span className="text-[10px] font-semibold tracking-wide text-ink-soft">
+            {NODE_TYPE_LABEL[node.nodeType]}
+          </span>
+          <textarea
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commitRename}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                commitRename();
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                setDraft(node.title);
+                setEditing(false);
+              }
+            }}
+            rows={2}
+            className="mt-1 w-full resize-none rounded-md border border-brand-300 bg-white px-1.5 py-1 text-[13px] font-medium leading-snug text-ink outline-none"
+          />
+        </div>
+      ) : (
+        <div onDoubleClick={() => { setDraft(node.title); setEditing(true); }}>
+          <NodeCardBody node={node} dimmed={dimmed} selected={selected} />
+        </div>
+      )}
+
+      {/* ホバー/選択時のアクション (ドラッグ・パン無効化) */}
+      {!editing && (
+        <div className="nodrag nopan absolute -right-2.5 -top-2.5 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 [.selected_&]:opacity-100">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddChild(node.id);
+            }}
+            aria-label={`「${node.title}」に子ノードを追加`}
+            title="子ノードを追加"
+            className="inline-flex size-6 items-center justify-center rounded-full border border-line bg-surface text-ink-soft shadow-card hover:border-brand-200 hover:bg-brand-50 hover:text-brand-600"
+          >
+            <Plus className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(node);
+            }}
+            aria-label={`「${node.title}」を削除`}
+            title="削除"
+            className="inline-flex size-6 items-center justify-center rounded-full border border-line bg-surface text-ink-soft shadow-card hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+          >
+            <Trash2 className="size-3.5" />
+          </button>
+        </div>
+      )}
+
       <Handle
         type="source"
         position={Position.Right}
         className="!size-2 !border-none !bg-[#c7d4e8]"
       />
-    </>
+    </div>
   );
 });

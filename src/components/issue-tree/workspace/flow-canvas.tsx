@@ -25,6 +25,7 @@ import {
   type IssueFlowNode,
 } from "@/lib/issue-tree/react-flow-adapter";
 import { IssueFlowNodeCard } from "./node-card";
+import { IssueFlowActionsContext, type IssueFlowActions } from "./flow-actions";
 
 const nodeTypes = { [ISSUE_NODE_TYPE]: IssueFlowNodeCard };
 
@@ -41,6 +42,7 @@ export function FlowCanvas({
   selectedId,
   onSelect,
   onMovePersist,
+  actions,
 }: {
   nodes: IssueTreeNode[];
   edges: IssueTreeEdge[];
@@ -49,6 +51,7 @@ export function FlowCanvas({
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onMovePersist: (payload: { id: string; position: { x: number; y: number } }) => void;
+  actions: IssueFlowActions;
 }) {
   const dimmed = useMemo(() => dimmedNodeIds(nodes, filters), [nodes, filters]);
 
@@ -67,25 +70,27 @@ export function FlowCanvas({
 
   return (
     <ReactFlowProvider>
-      <ReactFlow<IssueFlowNode>
-        nodes={flowNodes}
-        edges={flowEdges}
-        nodeTypes={nodeTypes}
-        onNodeClick={handleNodeClick}
-        onPaneClick={() => onSelect(null)}
-        onNodeDragStop={(_, node) => onMovePersist(fromDragStop(node))}
-        fitView
-        fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
-        minZoom={0.2}
-        maxZoom={1.6}
-        proOptions={{ hideAttribution: true }}
-        nodesConnectable={false}
-        deleteKeyCode={null}
-        className="bg-transparent"
-      >
-        <Background variant={BackgroundVariant.Dots} gap={22} size={1.5} color="#d8e2f0" />
-        <Controls showInteractive={false} position="bottom-right" />
-      </ReactFlow>
+      <IssueFlowActionsContext.Provider value={actions}>
+        <ReactFlow<IssueFlowNode>
+          nodes={flowNodes}
+          edges={flowEdges}
+          nodeTypes={nodeTypes}
+          onNodeClick={handleNodeClick}
+          onPaneClick={() => onSelect(null)}
+          onNodeDragStop={(_, node) => onMovePersist(fromDragStop(node))}
+          fitView
+          fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
+          minZoom={0.2}
+          maxZoom={1.6}
+          proOptions={{ hideAttribution: true }}
+          nodesConnectable={false}
+          deleteKeyCode={null}
+          className="bg-transparent"
+        >
+          <Background variant={BackgroundVariant.Dots} gap={22} size={1.5} color="#d8e2f0" />
+          <Controls showInteractive={false} position="bottom-right" />
+        </ReactFlow>
+      </IssueFlowActionsContext.Provider>
     </ReactFlowProvider>
   );
 }
