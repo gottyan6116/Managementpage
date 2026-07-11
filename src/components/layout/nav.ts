@@ -5,6 +5,7 @@ import {
   Network,
   CircleDollarSign,
   FileText,
+  Presentation,
   Home,
   LayoutGrid,
   Timer,
@@ -50,6 +51,7 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "ナレッジ",
     items: [
       { label: "ドキュメント", href: "/documents", icon: FileText },
+      { label: "資料保管", href: "/presentations", icon: Presentation },
       { label: "メモ", href: "/notes", icon: StickyNote },
     ],
   },
