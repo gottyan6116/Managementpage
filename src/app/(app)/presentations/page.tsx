@@ -1,2 +1,0 @@
-import { PresentationLibrary } from "@/components/presentations/presentation-library";
-export default function PresentationsPage() { return <div className="space-y-5"><div><p className="text-sm font-semibold text-brand-600">KNOWLEDGE</p><h1 className="mt-1 text-2xl font-bold text-ink">資料保管</h1><p className="mt-2 text-sm text-ink-soft">PowerPoint資料を安全に保管し、必要なときにダウンロードできます。</p></div><PresentationLibrary /></div>; }

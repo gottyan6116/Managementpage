@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import { NAV_SECTIONS } from "./nav";
 import {
   SIDEBAR_WIDTH_COLLAPSED,
@@ -11,7 +11,6 @@ import {
 } from "@/stores/ui-store";
 import { self } from "@/lib/repositories";
 import { cn } from "@/lib/utils";
-import { LogoutButton } from "./logout-button";
 
 function SidebarContent({
   collapsed,
@@ -108,7 +107,7 @@ function SidebarContent({
                   {me.role}
                 </span>
               </span>
-              <LogoutButton />
+              <ChevronDown className="size-4 shrink-0 text-ink-muted" />
             </>
           )}
         </button>

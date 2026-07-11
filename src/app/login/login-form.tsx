@@ -1,9 +1,0 @@
-"use client";
-import { FormEvent, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-
-export function LoginForm() {
-  const router = useRouter(); const params = useSearchParams(); const [password, setPassword] = useState(""); const [error, setError] = useState(""); const [pending, setPending] = useState(false);
-  async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setPending(true); setError(""); const response = await fetch("/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ password, next: params.get("next") }) }); const payload = await response.json() as { error?: string; next?: string }; setPending(false); if (!response.ok) { setError(payload.error ?? "ログインに失敗しました。"); return; } router.replace(payload.next ?? "/todo"); router.refresh(); }
-  return <form onSubmit={submit} className="w-full max-w-sm space-y-5 rounded-2xl border border-line bg-surface p-7 shadow-card"><div><p className="text-sm font-semibold text-brand-600">ProManage</p><h1 className="mt-1 text-2xl font-bold text-ink">ログイン</h1><p className="mt-2 text-sm text-ink-soft">パスワードを入力してください。</p></div><label className="block text-sm font-medium text-ink" htmlFor="password">パスワード<input id="password" type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 min-h-11 w-full rounded-xl border border-line bg-surface px-3 text-base outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200" /></label>{error && <p role="alert" className="text-sm text-red-600">{error}</p>}<button disabled={pending} className="primary-button min-h-11 w-full rounded-xl px-4 font-semibold disabled:opacity-60">{pending ? "確認中…" : "ログイン"}</button></form>;
-}
