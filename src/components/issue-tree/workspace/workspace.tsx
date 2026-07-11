@@ -223,7 +223,7 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
       )}
     >
       {/* ヘッダー */}
-      <div className="mb-3 flex items-center gap-3">
+      <div className={cn("mb-3 flex items-center gap-3", fullscreen && "hidden")}>
         <Link
           href="/issue-tree"
           aria-label="一覧へ戻る"
@@ -266,7 +266,7 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
       </div>
 
       {/* ツールバー: タブ + ビュー切替 + フィルタ + 追加 */}
-      <div className="mb-3 flex items-center gap-2">
+      <div className={cn("mb-3 flex items-center gap-2", fullscreen && "hidden")}>
         <div
           role="tablist"
           aria-label="ツリーの種類"
@@ -374,7 +374,7 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
       {/* 本体 3 カラム */}
       <div className="flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-line bg-surface">
         {/* フィルタ (xl 以上は常設 240px) */}
-        <aside className="hidden xl:block w-[240px] shrink-0 overflow-y-auto border-r border-line bg-surface-muted/30">
+        <aside className={cn("hidden xl:block w-[240px] shrink-0 overflow-y-auto border-r border-line bg-surface-muted/30", fullscreen && "!hidden")}>
           <FilterPanel />
         </aside>
 
@@ -399,6 +399,7 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
               onSelect={selectNode}
               onMovePersist={({ id, position }) => movePersist.mutate({ id, position })}
               actions={flowActions}
+              fullscreen={fullscreen}
             />
           ) : (
             <div className="h-full overflow-y-auto">
@@ -416,7 +417,7 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
         </div>
 
         {/* 右パネル (xl 以上は常設 360px) */}
-        <aside className="hidden xl:block w-[360px] shrink-0 overflow-y-auto border-l border-line bg-surface-muted/30">
+        <aside className={cn("hidden xl:block w-[360px] shrink-0 overflow-y-auto border-l border-line bg-surface-muted/30", fullscreen && "!hidden")}>
           {selectedNode ? (
             <NodeDetailPanel
               key={selectedNode.id}
@@ -431,7 +432,7 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
       </div>
 
       {/* フィルタドロワー (xl 未満) */}
-      {filterPanelOpen && (
+      {!fullscreen && filterPanelOpen && (
         <div className="xl:hidden fixed inset-0 z-40">
           <button
             type="button"
@@ -457,7 +458,7 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
       )}
 
       {/* ノード詳細オーバーレイ (xl 未満: モバイルはフルスクリーン) */}
-      {detailPanelOpen && selectedNode && (
+      {!fullscreen && detailPanelOpen && selectedNode && (
         <div className="xl:hidden fixed inset-0 z-40">
           <button
             type="button"
@@ -488,7 +489,7 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
       )}
 
       {/* 詳細パネル非表示時の再オープン導線 (xl 未満で選択中のみ) */}
-      {selectedNode && !detailPanelOpen && (
+      {!fullscreen && selectedNode && !detailPanelOpen && (
         <button
           type="button"
           onClick={() => setDetailPanelOpen(true)}

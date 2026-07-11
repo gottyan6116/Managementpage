@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import {
   Background,
   BackgroundVariant,
@@ -8,6 +8,7 @@ import {
   ReactFlow,
   ReactFlowProvider,
   type NodeMouseHandler,
+  useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
@@ -43,6 +44,7 @@ export function FlowCanvas({
   onSelect,
   onMovePersist,
   actions,
+  fullscreen,
 }: {
   nodes: IssueTreeNode[];
   edges: IssueTreeEdge[];
@@ -52,6 +54,7 @@ export function FlowCanvas({
   onSelect: (id: string | null) => void;
   onMovePersist: (payload: { id: string; position: { x: number; y: number } }) => void;
   actions: IssueFlowActions;
+  fullscreen: boolean;
 }) {
   const dimmed = useMemo(() => dimmedNodeIds(nodes, filters), [nodes, filters]);
 
@@ -70,7 +73,30 @@ export function FlowCanvas({
 
   return (
     <ReactFlowProvider>
-      <IssueFlowActionsContext.Provider value={actions}>
+      <CanvasBody
+        flowNodes={flowNodes}
+        flowEdges={flowEdges}
+        selectedId={selectedId}
+        onSelect={onSelect}
+        onMovePersist={onMovePersist}
+        actions={actions}
+        fullscreen={fullscreen}
+      />
+    </ReactFlowProvider>
+  );
+}
+
+function CanvasBody({ flowNodes, flowEdges, selectedId, onSelect, onMovePersist, actions, fullscreen }: {
+  flowNodes: IssueFlowNode[]; flowEdges: ReturnType<typeof toFlowEdges>; selectedId: string | null;
+  onSelect: (id: string | null) => void; onMovePersist: (payload: { id: string; position: { x: number; y: number } }) => void;
+  actions: IssueFlowActions; fullscreen: boolean;
+}) {
+  const { fitView, updateNodeInternals } = useReactFlow();
+  useEffect(() => {
+    const id = requestAnimationFrame(() => { flowNodes.forEach((node) => updateNodeInternals(node.id)); fitView({ padding: 0.16, maxZoom: 1.1, duration: 180 }); });
+    return () => cancelAnimationFrame(id);
+  }, [fitView, flowNodes, fullscreen, updateNodeInternals]);
+  return <IssueFlowActionsContext.Provider value={actions}>
         <ReactFlow<IssueFlowNode>
           nodes={flowNodes}
           edges={flowEdges}
@@ -88,11 +114,9 @@ export function FlowCanvas({
           className="bg-transparent"
         >
           <Background variant={BackgroundVariant.Dots} gap={22} size={1.5} color="#d8e2f0" />
-          <Controls showInteractive={false} position="bottom-right" />
+          {!fullscreen && <Controls showInteractive={false} position="bottom-right" />}
         </ReactFlow>
-      </IssueFlowActionsContext.Provider>
-    </ReactFlowProvider>
-  );
+      </IssueFlowActionsContext.Provider>;
 }
 
 export default FlowCanvas;
