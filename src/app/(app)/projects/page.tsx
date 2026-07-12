@@ -23,7 +23,7 @@ export default async function ProjectsPage({
 
       <div className="space-y-5">
         <ProjectsKpiRow />
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-5 items-start">
+        <div className="grid grid-cols-1 2xl:grid-cols-[1fr_340px] gap-5 items-start">
           <div className="min-w-0">
             <ProjectsTable initialTab={initialTab} />
           </div>

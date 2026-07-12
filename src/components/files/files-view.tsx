@@ -96,7 +96,7 @@ export function FilesView() {
       </div>
 
       {view === "grid" ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-4 gap-4">
           {visibleFiles?.map((f) => {
             const { Icon, color } = iconFor(f.mimeType);
             const project = f.projectId ? projectMap.get(f.projectId) : undefined;

@@ -574,7 +574,7 @@ function LeftRow({
         <>
           <span className="w-14 flex justify-center relative">
             {editable && editingAssignee ? (
-              <div className="absolute z-20 -left-5 top-1/2 -translate-y-1/2 w-24">
+              <div className="absolute z-20 -left-9 top-1/2 -translate-y-1/2 w-32">
                 <AssigneeCombobox
                   members={members}
                   value={member?.id ?? null}

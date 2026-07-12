@@ -275,7 +275,7 @@ function ExpandedRow({
   return (
     <tr className="border-t border-line bg-surface">
       <td colSpan={7} className="px-6 py-5">
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-ink">案件ガント</p>
             <p className="mb-3 text-xs text-ink-muted">

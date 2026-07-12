@@ -9,7 +9,7 @@ import { getKpiSeries } from "@/lib/repositories";
 export function ProjectsKpiRow() {
   const series = getKpiSeries();
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-4 lg:gap-5">
       <KpiCard
         icon={Briefcase}
         iconColor="#2563EB"
