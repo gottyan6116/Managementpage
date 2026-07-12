@@ -355,10 +355,14 @@ test("adapter: ドメイン → Flow ノード変換 (自動レイアウト + di
   });
   assert.equal(flow.length, 4);
   const byId = new Map(flow.map((n) => [n.id, n]));
-  // 明示 position はそのまま、未設定は自動レイアウト
+  // 明示 position はそのまま、未設定は dagre による自動レイアウト
   assert.deepEqual(byId.get("fixed")?.position, { x: 999, y: 5 });
-  assert.equal(byId.get("c1")?.position.x, 320); // depth 1
-  assert.ok((byId.get("root")?.position.y ?? 0) > 0); // 親は子の中央
+  assert.ok((byId.get("c1")?.position.x ?? 0) > (byId.get("root")?.position.x ?? 0)); // depth 1 は root より右
+  const rootY = byId.get("root")?.position.y ?? 0;
+  const c1Y = byId.get("c1")?.position.y ?? 0;
+  const c2Y = byId.get("c2")?.position.y ?? 0;
+  // 親は必ず子の縦方向レンジの中央に来る (トップ/ツリー線ズレ防止の要件)
+  assert.ok(rootY >= Math.min(c1Y, c2Y) - 1 && rootY <= Math.max(c1Y, c2Y) + 1);
   assert.equal(byId.get("c2")?.data.dimmed, true);
   assert.equal(byId.get("c1")?.data.selected, true);
   assert.equal(byId.get("c1")?.type, "issueNode");

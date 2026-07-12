@@ -373,10 +373,12 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
 
       {/* 本体 3 カラム */}
       <div className="flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-line bg-surface">
-        {/* フィルタ (xl 以上は常設 240px) */}
-        <aside className="hidden xl:block w-[240px] shrink-0 overflow-y-auto border-r border-line bg-surface-muted/30">
-          <FilterPanel />
-        </aside>
+        {/* フィルタ (xl 以上は常設 240px)。全画面表示中はツリーだけに集中できるよう非表示にする */}
+        {!fullscreen && (
+          <aside className="hidden xl:block w-[240px] shrink-0 overflow-y-auto border-r border-line bg-surface-muted/30">
+            <FilterPanel />
+          </aside>
+        )}
 
         {/* 中央 */}
         <div className="relative min-w-0 flex-1">
@@ -399,6 +401,7 @@ export function IssueTreeWorkspace({ projectId }: { projectId: string }) {
               onSelect={selectNode}
               onMovePersist={({ id, position }) => movePersist.mutate({ id, position })}
               actions={flowActions}
+              fullscreen={fullscreen}
             />
           ) : (
             <div className="h-full overflow-y-auto">

@@ -3,11 +3,11 @@
  * ドメイン (IssueTreeNode/IssueTreeEdge) と React Flow の Node/Edge を相互変換する
  * 唯一のレイヤー。ドメイン層は @xyflow/react を一切 import しない。
  */
+import dagre from "dagre";
 import type { Edge as FlowEdge, Node as FlowNode } from "@xyflow/react";
 import {
   buildHierarchy,
   type IssueTreeEdge,
-  type IssueTreeHierarchyNode,
   type IssueTreeNode,
   type IssueTreeNodePosition,
   type IssueTreeType,
@@ -24,12 +24,18 @@ export interface IssueFlowNodeData {
 
 export type IssueFlowNode = FlowNode<IssueFlowNodeData>;
 
-const COL_WIDTH = 320;
-const ROW_HEIGHT = 120;
+// カードの概算サイズ (dagre は正確な実測ではなく概算サイズで間隔を計算する)
+const NODE_WIDTH = 240;
+const NODE_HEIGHT = 104;
+const RANK_SEP = 96; // 階層 (列) 間の間隔
+const NODE_SEP = 28; // 兄弟 (行) 間の間隔
 
 /**
  * position が未設定 (null) のノードに階層ベースの自動レイアウト座標を与える。
- * 葉から順に行を割り当て、親は子の中央に置く単純な tidy レイアウト。
+ * dagre (tidy tree アルゴリズム) を使い、親は必ず子の縦方向の中央に、
+ * 幹/枝の接続線がカードの中心からズレないことを保証する。
+ * 独自実装だと「子ノード追加のたびに全体が再配置されズレる」問題が起きやすいため、
+ * 実績のあるレイアウトエンジンに委譲する。
  */
 export function computeAutoLayout(
   nodes: IssueTreeNode[],
@@ -37,22 +43,31 @@ export function computeAutoLayout(
 ): Map<string, IssueTreeNodePosition> {
   const roots = buildHierarchy(nodes, treeType);
   const positions = new Map<string, IssueTreeNodePosition>();
-  let nextRow = 0;
+  if (roots.length === 0) return positions;
 
-  function place(node: IssueTreeHierarchyNode, depth: number): number {
-    if (node.children.length === 0) {
-      const y = nextRow * ROW_HEIGHT;
-      nextRow += 1;
-      positions.set(node.id, { x: depth * COL_WIDTH, y });
-      return y;
-    }
-    const childYs = node.children.map((c) => place(c, depth + 1));
-    const y = (Math.min(...childYs) + Math.max(...childYs)) / 2;
-    positions.set(node.id, { x: depth * COL_WIDTH, y });
-    return y;
+  const g = new dagre.graphlib.Graph();
+  g.setGraph({ rankdir: "LR", ranksep: RANK_SEP, nodesep: NODE_SEP });
+  g.setDefaultEdgeLabel(() => ({}));
+
+  const scoped = nodes.filter((n) => n.treeType === treeType);
+  for (const n of scoped) {
+    g.setNode(n.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+  }
+  for (const n of scoped) {
+    if (n.parentId) g.setEdge(n.parentId, n.id);
   }
 
-  for (const root of roots) place(root, 0);
+  dagre.layout(g);
+
+  // dagre は中心座標を返すため、React Flow の左上原点座標へ変換する
+  for (const n of scoped) {
+    const pos = g.node(n.id);
+    if (!pos) continue;
+    positions.set(n.id, {
+      x: Math.round(pos.x - NODE_WIDTH / 2),
+      y: Math.round(pos.y - NODE_HEIGHT / 2),
+    });
+  }
   return positions;
 }
 

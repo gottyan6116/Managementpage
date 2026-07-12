@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
   Background,
   BackgroundVariant,
   Controls,
   ReactFlow,
   ReactFlowProvider,
+  useReactFlow,
   type NodeMouseHandler,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -43,6 +44,7 @@ export function FlowCanvas({
   onSelect,
   onMovePersist,
   actions,
+  fullscreen,
 }: {
   nodes: IssueTreeNode[];
   edges: IssueTreeEdge[];
@@ -52,7 +54,46 @@ export function FlowCanvas({
   onSelect: (id: string | null) => void;
   onMovePersist: (payload: { id: string; position: { x: number; y: number } }) => void;
   actions: IssueFlowActions;
+  fullscreen?: boolean;
 }) {
+  return (
+    <ReactFlowProvider>
+      <IssueFlowActionsContext.Provider value={actions}>
+        <FlowCanvasInner
+          nodes={nodes}
+          edges={edges}
+          treeType={treeType}
+          filters={filters}
+          selectedId={selectedId}
+          onSelect={onSelect}
+          onMovePersist={onMovePersist}
+          fullscreen={fullscreen}
+        />
+      </IssueFlowActionsContext.Provider>
+    </ReactFlowProvider>
+  );
+}
+
+function FlowCanvasInner({
+  nodes,
+  edges,
+  treeType,
+  filters,
+  selectedId,
+  onSelect,
+  onMovePersist,
+  fullscreen,
+}: {
+  nodes: IssueTreeNode[];
+  edges: IssueTreeEdge[];
+  treeType: IssueTreeType;
+  filters: IssueTreeFilters;
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+  onMovePersist: (payload: { id: string; position: { x: number; y: number } }) => void;
+  fullscreen?: boolean;
+}) {
+  const { fitView } = useReactFlow();
   const dimmed = useMemo(() => dimmedNodeIds(nodes, filters), [nodes, filters]);
 
   const flowNodes = useMemo(
@@ -64,34 +105,52 @@ export function FlowCanvas({
     [nodes, edges, treeType, dimmed],
   );
 
+  // 構造 (ノード集合・階層) が変わったとき、または全画面切替時に
+  // 常に「一番見やすい縮尺」へ自動調整する。ドラッグ中の一時的な座標変化では発火しない。
+  const structureSignature = useMemo(
+    () =>
+      nodes
+        .filter((n) => n.treeType === treeType)
+        .map((n) => `${n.id}:${n.parentId ?? ""}`)
+        .sort()
+        .join("|"),
+    [nodes, treeType],
+  );
+  const prevSignature = useRef<string | null>(null);
+  useEffect(() => {
+    // ノード寸法の計測 (ResizeObserver) が終わってからフィットさせるため一呼吸置く
+    const timer = setTimeout(() => {
+      fitView({ padding: 0.2, duration: 300, maxZoom: 1.1 });
+    }, 60);
+    prevSignature.current = structureSignature;
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [structureSignature, treeType, fullscreen]);
+
   const handleNodeClick: NodeMouseHandler<IssueFlowNode> = (_, node) => {
     onSelect(node.id);
   };
 
   return (
-    <ReactFlowProvider>
-      <IssueFlowActionsContext.Provider value={actions}>
-        <ReactFlow<IssueFlowNode>
-          nodes={flowNodes}
-          edges={flowEdges}
-          nodeTypes={nodeTypes}
-          onNodeClick={handleNodeClick}
-          onPaneClick={() => onSelect(null)}
-          onNodeDragStop={(_, node) => onMovePersist(fromDragStop(node))}
-          fitView
-          fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
-          minZoom={0.2}
-          maxZoom={1.6}
-          proOptions={{ hideAttribution: true }}
-          nodesConnectable={false}
-          deleteKeyCode={null}
-          className="bg-transparent"
-        >
-          <Background variant={BackgroundVariant.Dots} gap={22} size={1.5} color="#d8e2f0" />
-          <Controls showInteractive={false} position="bottom-right" />
-        </ReactFlow>
-      </IssueFlowActionsContext.Provider>
-    </ReactFlowProvider>
+    <ReactFlow<IssueFlowNode>
+      nodes={flowNodes}
+      edges={flowEdges}
+      nodeTypes={nodeTypes}
+      onNodeClick={handleNodeClick}
+      onPaneClick={() => onSelect(null)}
+      onNodeDragStop={(_, node) => onMovePersist(fromDragStop(node))}
+      fitView
+      fitViewOptions={{ padding: 0.2, maxZoom: 1.1 }}
+      minZoom={0.15}
+      maxZoom={1.6}
+      proOptions={{ hideAttribution: true }}
+      nodesConnectable={false}
+      deleteKeyCode={null}
+      className="bg-transparent"
+    >
+      <Background variant={BackgroundVariant.Dots} gap={22} size={1.5} color="#d8e2f0" />
+      <Controls showInteractive={false} position="bottom-right" />
+    </ReactFlow>
   );
 }
 
