@@ -7,6 +7,7 @@ import {
   FileText,
   Home,
   LayoutGrid,
+  Presentation,
   Timer,
   StickyNote,
   type LucideIcon,
@@ -50,6 +51,7 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "ナレッジ",
     items: [
       { label: "ドキュメント", href: "/documents", icon: FileText },
+      { label: "資料 (PPT)", href: "/decks", icon: Presentation },
       { label: "メモ", href: "/notes", icon: StickyNote },
     ],
   },
