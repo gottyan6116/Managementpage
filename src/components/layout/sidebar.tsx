@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ChevronDown, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { ChevronDown, LogOut, X } from "lucide-react";
 import { NAV_SECTIONS } from "./nav";
 import {
   SIDEBAR_WIDTH_COLLAPSED,
@@ -20,7 +20,25 @@ function SidebarContent({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const me = self();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    }
+    window.addEventListener("mousedown", onClick);
+    return () => window.removeEventListener("mousedown", onClick);
+  }, [menuOpen]);
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.replace("/login");
+    router.refresh();
+  }
 
   return (
     <div className="sidebar-glass relative h-full rounded-2xl overflow-hidden flex flex-col">
@@ -83,9 +101,24 @@ function SidebarContent({
       </nav>
 
       {/* プロフィール */}
-      <div className="relative p-3">
+      <div className="relative p-3" ref={menuRef}>
+        {menuOpen && (
+          <div className="absolute bottom-full left-3 right-3 z-30 mb-2 overflow-hidden rounded-xl border border-line bg-surface shadow-pop">
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-medium text-ink-soft hover:bg-surface-muted hover:text-red-600 transition-colors"
+            >
+              <LogOut className="size-4" />
+              ログアウト
+            </button>
+          </div>
+        )}
         <button
           type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
           className={cn(
             "profile-card w-full flex items-center gap-2.5 rounded-xl hover:brightness-[0.98] transition-colors px-3 py-2.5 text-left",
             collapsed && "justify-center px-0",
